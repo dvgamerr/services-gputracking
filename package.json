@@ -1,0 +1,26 @@
+{
+  "name": "gpu-watcher",
+  "version": "1.0.0",
+  "description": "gpu watcher and realtime upload data to server (nvidia version)",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dvgamer/gpu-watcher.git"
+  },
+  "author": "Kananek Thongkam",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/dvgamer/gpu-watcher/issues"
+  },
+  "homepage": "https://github.com/dvgamer/gpu-watcher#readme",
+  "dependencies": {
+    "chalk": "^2.0.1",
+    "clear": "0.0.1",
+    "moment": "^2.18.1",
+    "tree-kill": "^1.1.0"
+  }
+}
