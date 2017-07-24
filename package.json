@@ -4,7 +4,7 @@
   "description": "gpu watcher and realtime upload data to server (nvidia version)",
   "main": "app.js",
   "scripts": {
-    "start": "node app.js",
+    "start": "node app.js TKMinerA",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
