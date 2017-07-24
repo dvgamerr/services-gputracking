@@ -36,7 +36,7 @@ var smi = function(data) {
 	this.temp = parseInt(obj[5])
 	this.ugpu = obj[6]
 	this.umemory = obj[7]
-	this.power = obj[11] === '[Not Supported]' ? null : obj[11]
+	this.power = obj[11] === '[Not Supported]' ? null : parseFloat(obj[11])
 	this.clocks = parseInt(obj[12])
 	this.fan = obj[13] === '[Not Supported]' ? null : obj[13]
 	this.memory = {
@@ -46,12 +46,12 @@ var smi = function(data) {
 	}
 }
 
-emiter.watch = function() {
+emiter.watch = function(config) {
 	let line = ''
 	let total = -1
 	let NVSMIx64 	= `C:/Program Files/NVIDIA Corporation/NVSMI/nvidia-smi.exe`;
 	if (fs.existsSync(`${NVSMIx64}`)) { 
-		exec(`"${NVSMIx64}" --query-gpu=${query.join(',')} --format=csv -l 1`, data => {
+		exec(`"${NVSMIx64}" --query-gpu=${query.join(',')} --format=csv -l ${config.interval || 1}`, data => {
 			line += data
 			if (/\r\n/ig.test(line)) {
 				total++
