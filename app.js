@@ -13,8 +13,7 @@ let normalization = (gpu) => {
       Temperature: ${colorTemp(gpu.temp,'°C')} Power: ${!gpu.power ? chalk.red('[Not Supported]') : colorPower(gpu.power,'W')} Speed: ${!gpu.fan ? chalk.red('[Not Supported]') : gpu.fan}
   `)
   if (gpu.temp > 85) {
-
-  	payload.content = `**GPU#${gpu.index}** ${gpu.name} ${parseInt(gpu.memory.total / 1024)}GB --- Temperature: ${gpu.temp} °C Power: ${!gpu.power ? '[Not Supported]' : `${gpu.power} W`}`
+  	payload.content = `**GPU#${gpu.index}** ${gpu.name} ${parseInt(gpu.memory.total / 1024)}GB --- Temperature: \`${gpu.temp} °C\` POWER: ${!gpu.power ? '[Not Supported]' : `\`${gpu.power} W\``}`
 		request({
 			method: 'POST',
 			headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
