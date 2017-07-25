@@ -2,36 +2,51 @@
 const clear 	= require("clear")
 const chalk 	= require('chalk')
 const os 			= require('os')
-const request = require('request-promise')
-const nvidia 	= require('./nvidia-smi/query')
+const moment 	= require('moment')
+const nvidia 	= require('./nvidia-smi')
+const slack 	= require('./slack-webhook')
 // **GPU#0** GeForce GTX 1080 Ti 11GB - Temperature: `84 °C` Power: `245.54 W`
-let payload = {}
+let isOverheat = false, atOverheat = null
+let min = 100, max = 0
+
 let colorTemp = (temp, unit) => (temp >= 80 ? (temp >= 90 ? chalk.red(temp, unit) : chalk.yellow(temp, unit)) : chalk.green(temp, unit));
 let colorPower = (temp, unit) => (temp >= 220 ? (temp >= 250 ? chalk.red(temp, unit) : chalk.yellow(temp, unit)) : chalk.green(temp, unit));
 let normalization = (gpu) => {
-  console.log(`GPU#${gpu.index} ${gpu.name} ${parseInt(gpu.memory.total / 1024)}GB --- GPU: ${chalk.magenta(gpu.ugpu)} Memory: ${chalk.magenta((gpu.memory.used * 100 / gpu.memory.total).toFixed(1),'%')}
-      Temperature: ${colorTemp(gpu.temp,'°C')} Power: ${!gpu.power ? chalk.red('[Not Supported]') : colorPower(gpu.power,'W')} Speed: ${!gpu.fan ? chalk.red('[Not Supported]') : gpu.fan}
-  `)
-  if (gpu.temp > 85) {
-  	payload.content = `**GPU#${gpu.index}** ${gpu.name} ${parseInt(gpu.memory.total / 1024)}GB --- Temperature: \`${gpu.temp} °C\` POWER: ${!gpu.power ? '[Not Supported]' : `\`${gpu.power} W\``}`
-		request({
-			method: 'POST',
-			headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-			url: 'https://discordapp.com/api/webhooks/336450900451131394/ClWz7pnFv8qP34GCjgDbcu8UtlbiUzeK3GEDxFpLOrktkm8OI5OQq983eXMWfS56aMuX',
-			formData: { payload_json: JSON.stringify(payload) }
-		}).then(res => {
-			console.log(res)
-		}).catch(ex => {
-			console.log(ex)
+	if (gpu.temp < min) min = gpu.temp
+	if (gpu.temp > max) max = gpu.temp
+  console.log(` GPU#${gpu.index} ${gpu.name} ${parseInt(gpu.memory.total / 1024)}GB --- GPU: ${chalk.magenta(gpu.ugpu)} Memory: ${chalk.magenta((gpu.memory.used * 100 / gpu.memory.total).toFixed(1),'%')} Temperature: ${colorTemp(gpu.temp,'°C')} Power: ${!gpu.power ? chalk.red('N\\A') : colorPower(gpu.power,'W')} Speed: ${!gpu.fan ? chalk.red('N\\A') : gpu.fan}`)
+  if ((gpu.temp >= 85 || gpu.temp < 60) && !isOverheat) {
+  	let message = `*GPU#${gpu.index}:* \`${gpu.ugpu}\` Temperature: \`${gpu.temp}°C\` Power: \`${!gpu.power ? 'N\\A' : `${gpu.power} W`}\``
+		slack.hook(`${(process.argv[2] ? `[${process.argv[2]}]` : '')}`, message).then((res) => {
+			if (res === 'ok') console.log('error', res)
 		})
-  	
+  	isOverheat = true
+  	atOverheat = new Date()
+  } else if (isOverheat) {
+  	if (new Date() - atOverheat > 90000) isOverheat = false
   }
 }
 
 nvidia.on('gpu', gpu => {
 	clear()
-	console.log(`Computer Name: ${os.hostname()} ${(process.argv[2] ? `[${process.argv[2]}]` : '')} (update at ${gpu.date.format('DD MMMM YYYY HH:MM:ss.SSS')})`)
+	if (gpu.index == 0) console.log(`Computer Name: ${os.hostname()} ${(process.argv[2] ? `[${process.argv[2]}]` : '')} (update at ${gpu.date.format('DD MMMM YYYY HH:MM:ss.SSS')})`)
 	normalization(gpu)
 });
 
 nvidia.watch({ interval: 1 })
+
+// let r = require('rethinkdb')
+// r.connect({ host: 'localhost', port: 28015 }, function(err, conn) {
+//   if(err) throw err
+//   console.log('RethinkDB Connected...')
+//   conn.close()
+//   r.db('test').tableCreate('tv_shows').run(conn, function(err, res) {
+//     if(err) throw err;
+//     console.log(res);
+//     r.table('tv_shows').insert({ name: 'Star Trek TNG' }).run(conn, function(err, res)
+//     {
+//       if(err) throw err;
+//       console.log(res);
+//     });
+//   });
+// });

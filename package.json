@@ -4,7 +4,7 @@
   "description": "gpu watcher and realtime upload data to server (nvidia version)",
   "main": "app.js",
   "scripts": {
-    "start": "node app.js TKMinerA",
+    "start": "node app.js GPUMinerA",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -23,6 +23,7 @@
     "moment": "^2.18.1",
     "request": "^2.81.0",
     "request-promise": "^4.2.1",
+    "rethinkdb": "^2.3.3",
     "tree-kill": "^1.1.0"
   }
 }
