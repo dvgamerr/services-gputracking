@@ -5,6 +5,8 @@
   "main": "app.js",
   "scripts": {
     "start": "node app.js GPUMinerA",
+    "miner1": "cls && TITLE GPUMinerA && node app.js GPUMinerA",
+    "miner2": "cls && TITLE GPUMinerB && node app.js GPUMinerB",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {

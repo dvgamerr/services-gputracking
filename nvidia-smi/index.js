@@ -1,7 +1,7 @@
 const fs 			= require('fs')
 const moment 	= require('moment')
-const exec 		= require('./lib/process')
 const events 	= require('events')
+const spawn 		= require('child_process').spawn
 const emiter 	= new events.EventEmitter()
 
 let query = [
@@ -50,8 +50,10 @@ emiter.watch = function(config) {
 	let line = ''
 	let total = -1
 	let NVSMIx64 	= `C:/Program Files/NVIDIA Corporation/NVSMI/nvidia-smi.exe`;
-	if (fs.existsSync(`${NVSMIx64}`)) { 
-		exec(`"${NVSMIx64}" --query-gpu=${query.join(',')} --format=csv -l ${config.interval || 1}`, data => {
+	if (fs.existsSync(`${NVSMIx64}`)) {
+		let ls = spawn(NVSMIx64, [`--query-gpu=${query.join(',')}`,`--format=csv`,`-l`,`${config.interval || 1}`])
+
+		ls.stdout.on('data', (data) => {
 			line += data
 			if (/\r\n/ig.test(line)) {
 				total++
@@ -61,7 +63,19 @@ emiter.watch = function(config) {
 				}
 				line = ''
 			}
-		})
+		});
+
+		ls.stderr.on('data', (data) => {
+		  console.log(`stderr: ${data}`);
+		});
+
+		ls.on('close', (code) => {
+		  console.log(`child process exited with code ${code}`);
+		});
+
+
+	} else {
+		throw `Please install nvidia driver and check 'nvidia-smi.exe'.`
 	}
 }
 

@@ -3,11 +3,16 @@ const clear 	= require("clear")
 const chalk 	= require('chalk')
 const os 			= require('os')
 const moment 	= require('moment')
+const r 			= require('rethinkdb')
+
 const nvidia 	= require('./nvidia-smi')
 const slack 	= require('./slack-webhook')
 // **GPU#0** GeForce GTX 1080 Ti 11GB - Temperature: `84 °C` Power: `245.54 W`
 let isOverheat = false, atOverheat = null
 let min = 100, max = 0
+let graph = {
+	gpu: []
+}
 
 let colorTemp = (temp, unit) => (temp >= 80 ? (temp >= 90 ? chalk.red(temp, unit) : chalk.yellow(temp, unit)) : chalk.green(temp, unit));
 let colorPower = (temp, unit) => (temp >= 220 ? (temp >= 250 ? chalk.red(temp, unit) : chalk.yellow(temp, unit)) : chalk.green(temp, unit));
@@ -15,7 +20,7 @@ let normalization = (gpu) => {
 	if (gpu.temp < min) min = gpu.temp
 	if (gpu.temp > max) max = gpu.temp
   console.log(` GPU#${gpu.index} ${gpu.name} ${parseInt(gpu.memory.total / 1024)}GB --- GPU: ${chalk.magenta(gpu.ugpu)} Memory: ${chalk.magenta((gpu.memory.used * 100 / gpu.memory.total).toFixed(1),'%')} Temperature: ${colorTemp(gpu.temp,'°C')} Power: ${!gpu.power ? chalk.red('N\\A') : colorPower(gpu.power,'W')} Speed: ${!gpu.fan ? chalk.red('N\\A') : gpu.fan}`)
-  if ((gpu.temp >= 85 || gpu.temp < 60) && !isOverheat) {
+  if ((gpu.temp >= 85 || gpu.temp < 20) && !isOverheat) {
   	let message = `*GPU#${gpu.index}:* \`${gpu.ugpu}\` Temperature: \`${gpu.temp}°C\` Power: \`${!gpu.power ? 'N\\A' : `${gpu.power} W`}\``
 		slack.hook(`${(process.argv[2] ? `[${process.argv[2]}]` : '')}`, message).then((res) => {
 			if (res === 'ok') console.log('error', res)
@@ -27,26 +32,43 @@ let normalization = (gpu) => {
   }
 }
 
-nvidia.on('gpu', gpu => {
-	clear()
-	if (gpu.index == 0) console.log(`Computer Name: ${os.hostname()} ${(process.argv[2] ? `[${process.argv[2]}]` : '')} (update at ${gpu.date.format('DD MMMM YYYY HH:MM:ss.SSS')})`)
-	normalization(gpu)
-});
+if (process.argv[2]) {
+	// r.connect({ host: 'localhost', port: 28015 }, function(err, conn) {
+		// conn.use('miner')
+	 //  r.db('miner').run(conn, function(err, res) {
+			nvidia.watch({ interval: 1 })
+			nvidia.on('gpu', gpu => {
+		   //  r.table('gpu_stats').insert({ 
+		   //  	miner: process.argv[2], gpu: {
+			  //    index: gpu.index,
+			  //    date: gpu.date.toDate(),
+			  //    name: gpu.name,
+			  //    device: gpu.device,
+			  //    bus: gpu.bus,
+			  //    domain: gpu.domain,
+			  //    temp: gpu.temp,
+			  //    ugpu: gpu.ugpu,
+			  //    umemory: gpu.umemory,
+			  //    power: gpu.power,
+			  //    clocks: gpu.clocks,
+			  //    fan: gpu.fan,
+			  //    memory: gpu.memory
+		   //  	} 
+		  	// }).run(conn)
+				graph.update = gpu.date
+				graph.gpu[gpu.index] = gpu
+			});
 
-nvidia.watch({ interval: 1 })
+	//   })
 
-// let r = require('rethinkdb')
-// r.connect({ host: 'localhost', port: 28015 }, function(err, conn) {
-//   if(err) throw err
-//   console.log('RethinkDB Connected...')
-//   conn.close()
-//   r.db('test').tableCreate('tv_shows').run(conn, function(err, res) {
-//     if(err) throw err;
-//     console.log(res);
-//     r.table('tv_shows').insert({ name: 'Star Trek TNG' }).run(conn, function(err, res)
-//     {
-//       if(err) throw err;
-//       console.log(res);
-//     });
-//   });
-// });
+	// })
+
+	setInterval(() => {
+		clear()
+		console.log(`Computer Name: ${os.hostname()} [${process.argv[2]}][${graph.gpu.length}] (update at ${graph.update.format('DD MMMM YYYY HH:mm:ss.SSS')})`)
+		graph.gpu.forEach((item) => {
+			normalization(item)
+		})
+	}, 1000)
+
+}
