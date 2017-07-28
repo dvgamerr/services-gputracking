@@ -51,7 +51,7 @@ emiter.watch = function(config) {
 	let total = -1
 	let NVSMIx64 	= `C:/Program Files/NVIDIA Corporation/NVSMI/nvidia-smi.exe`;
 	if (fs.existsSync(`${NVSMIx64}`)) {
-		let ls = spawn(NVSMIx64, [`--query-gpu=${query.join(',')}`,`--format=csv`,`-l`,`${config.interval || 1}`])
+		let ls = spawn('cmd.exe', ['/c', NVSMIx64, `--query-gpu=${query.join(',')}`,`--format=csv`,`-l`,`${config.interval || 1}`])
 
 		ls.stdout.on('data', (data) => {
 			line += data
