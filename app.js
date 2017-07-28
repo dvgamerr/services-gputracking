@@ -1,6 +1,5 @@
 // C:\Program Files\NVIDIA Corporation\NVSMI\nvidia-smi.exe
-const clear 	= require("clear")
-const chalk 	= require('chalk')
+const term 		= require( 'terminal-kit' ).terminal
 const os 			= require('os')
 const request = require('request-promise')
 const moment 	= require('moment')
@@ -64,12 +63,13 @@ let balance = () => request({
 	// console.log('balance_confirmed', res.result.balance_confirmed)
 })
 
-let colorTemp = (temp, unit) => (temp >= 80 ? (temp >= 90 ? chalk.red(temp, unit) : chalk.yellow(temp, unit)) : chalk.green(temp, unit));
-let colorPower = (temp, unit) => (temp >= 220 ? (temp >= 250 ? chalk.red(temp, unit) : chalk.yellow(temp, unit)) : chalk.green(temp, unit));
-let normalization = (gpu) => {
+let colorTemp = (temp, unit) => (temp >= 80 ? (temp >= 90 ? (temp, unit) : (temp, unit)) : (temp, unit));
+let colorPower = (temp, unit) => (temp >= 220 ? (temp >= 250 ? (temp, unit) : (temp, unit)) : (temp, unit));
+let normalization = (gpu, i) => {
 	if (gpu.temp < min) min = gpu.temp
 	if (gpu.temp > max) max = gpu.temp
-  console.log(`   - GPU#${gpu.index} ${gpu.name} ${parseInt(gpu.memory.total / 1024)}GB --- GPU: ${chalk.magenta(gpu.ugpu)} Memory: ${chalk.magenta((gpu.memory.used * 100 / gpu.memory.total).toFixed(1),'%')} Temperature: ${colorTemp(gpu.temp,'°C')} Power: ${!gpu.power ? chalk.red('N\\A') : colorPower(gpu.power,'W')} Speed: ${!gpu.fan ? chalk.red('N\\A') : gpu.fan}`)
+
+	term.moveTo(1, 6+i , `- GPU#${gpu.index} ${gpu.name} ${parseInt(gpu.memory.total / 1024)}GB --- GPU: ${(gpu.ugpu)} Memory: ${((gpu.memory.used * 100 / gpu.memory.total).toFixed(1),'%')} Temperature: ${colorTemp(gpu.temp,'°C')} Power: ${!gpu.power ? ('N\\A') : colorPower(gpu.power,'W')} Speed: ${!gpu.fan ? ('N\\A') : gpu.fan}`)
   if ((gpu.temp >= 85 || gpu.temp < 60) && !isOverheat) {
   	let slack_text = `*GPU#${gpu.index}:* \`${gpu.ugpu}\` Temperature: \`${gpu.temp}°C\` Power: \`${!gpu.power ? 'N\\A' : `${gpu.power} W`}\``
   	let line_text = `GPU#${gpu.index}: ${gpu.ugpu} Temperature: ${gpu.temp}°C P: ${!gpu.power ? 'N\\A' : `${gpu.power} W`}`
@@ -92,7 +92,8 @@ let normalization = (gpu) => {
 }
 
 if (process.argv[2]) {
-	r.connect({ host: 'aws.touno.co', port: 6511 }, function(err, conn) {
+	// r.connect({ host: 'aws.touno.co', port: 6511 }, function(err, conn) {
+	r.connect({ host: 'localhost', port: 28015 }, function(err, conn) {
 		conn.use('miner')
 		nvidia.watch({ interval: 1 })
 		nvidia.on('gpu', gpu => {
@@ -120,21 +121,29 @@ if (process.argv[2]) {
 
 
 	setInterval(() => {
-		let unpaid = `Unpaid: ${chalk.green((graph.unpaid * graph.exchange).toFixed(2),'THB')} (${(graph.unpaid).toFixed(8)}) BTC`
-		let balance = `Balance: ${chalk.green((graph.balance * graph.exchange).toFixed(2),'THB')} (${graph.balance}) BTC`
-		let daily = `Daily: ${chalk.green((graph.amount * graph.exchange).toFixed(2),'THB')} (${graph.amount.toFixed(8)}) BTC`
-		let monthly = `Monthly: ${chalk.green(((graph.amount * 30) * graph.exchange).toFixed(2),'THB')}`
+		let unpaid = `Unpaid: ${(graph.unpaid * graph.exchange).toFixed(2)} THB (${(graph.unpaid).toFixed(8)}) BTC`
+		let balance = `Balance: ${(graph.balance * graph.exchange).toFixed(2)} THB (${graph.balance}) BTC`
+		let daily = `Daily: ${(graph.amount * graph.exchange).toFixed(2)} THB (${graph.amount.toFixed(8)}) BTC`
+		let monthly = `Monthly: ${((graph.amount * 30) * graph.exchange).toFixed(2)} THB`
 		let exchange = `(1 BTC = ${graph.exchange} THB)`
-		clear()
-		console.log('')
-		console.log(`                      Computer Name: ${os.hostname()} [${process.argv[2]}][${graph.gpu.length}] | ${exchange}`)
-		console.log(`             ${daily}         ${monthly}`)
-		console.log(`            ${unpaid}          ${balance}`)
-		console.log('  ------------------------------------------------------------------------------------------------------')
-		console.log(`  List GPU update at ${graph.update.format('DD MMMM YYYY HH:mm:ss.SSS')} `)
-		graph.gpu.forEach((item) => {
-			normalization(item)
+
+		// console.log('')
+		// console.log(`                      Computer Name: ${os.hostname()} [${process.argv[2]}][${graph.gpu.length}] | ${exchange}`)
+		// console.log(`             ${daily}         ${monthly}`)
+		// console.log(`            ${unpaid}          ${balance}`)
+		// console.log('  ------------------------------------------------------------------------------------------------------')
+		// console.log(`  List GPU update at ${graph.update.format('DD MMMM YYYY HH:mm:ss.SSS')} `)
+
+		term.white('\n')
+		term.moveTo(1,1, `Computer Name: ${os.hostname()} [${process.argv[2]}][${graph.gpu.length}] | ${exchange}`) ;
+		term.moveTo(1,2, `${daily}         ${monthly}`) ;
+		term.moveTo(1,3, `${unpaid}          ${balance}`) ;
+		term.moveTo(1,4, '------------------------------------------------------------------------------------------------------')
+		term.moveTo(1,5, `List GPU update at ${graph.update.format('DD MMMM YYYY HH:mm:ss.SSS')}`)
+		graph.gpu.forEach((item, i) => {
+			normalization(item, i)
 		})
+		term.white('\n')
 	}, 1000)
 
 	unpaid()

@@ -21,14 +21,12 @@
   "homepage": "https://github.com/dvgamer/gpu-watcher#readme",
   "dependencies": {
     "@line/bot-sdk": "^2.0.0",
-    "chalk": "^2.0.1",
-    "clear": "0.0.1",
-    "cli-clear": "^1.0.4",
     "cron": "^1.2.1",
     "moment": "^2.18.1",
     "request": "^2.81.0",
     "request-promise": "^4.2.1",
     "rethinkdb": "^2.3.3",
+    "terminal-kit": "^1.11.2",
     "tree-kill": "^1.1.0"
   }
 }
