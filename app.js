@@ -23,6 +23,7 @@ let graph = {
 	exchange: 0,
 	balance: 0.0,
 	unpaid: 0,
+	amount: 0,
 	gpu: []
 }
 
@@ -43,6 +44,11 @@ let unpaid = () => request({
 	res.result.stats.forEach(item => {
 		graph.unpaid += parseFloat(item.balance)
 	})
+	res.result.payments.forEach(item => {
+		graph.amount += parseFloat(item.amount)
+	})
+	graph.amount = graph.amount / res.result.payments.length
+
 	if (res.result.payments.length > 0 && graph.payment != res.result.payments[0].time) {
 		graph.payment = res.result.payments[0].time
 		balance()
@@ -113,11 +119,15 @@ if (process.argv[2]) {
 
 
 	setInterval(() => {
+		let unpaid = `Unpaid: ${chalk.green((graph.unpaid * graph.exchange).toFixed(2),'THB')} (${(graph.unpaid).toFixed(8)}) BTC`
+		let balance = `Balance: ${chalk.green((graph.balance * graph.exchange).toFixed(2),'THB')} (${graph.balance}) BTC`
+		let daily = `Daily: ${chalk.green((graph.amount * graph.exchange).toFixed(2),'THB')} (${graph.amount.toFixed(8)}) BTC`
+		let monthly = `Monthly: ${chalk.green(((graph.amount * 30) * graph.exchange).toFixed(2),'THB')}`
 		clear()
 		console.log('')
 		console.log(`                                 Computer Name: ${os.hostname()} [${process.argv[2]}][${graph.gpu.length}]`)
-		console.log(`                                        INFO.DVGAMER@GMAIL.COM`)
-		console.log(`            ${`Unpaid: ${chalk.green((graph.unpaid * graph.exchange).toFixed(2),'THB')} (${(graph.unpaid).toFixed(8)}) BTC          Balance: ${chalk.green((graph.balance * graph.exchange).toFixed(2),'THB')}`} (${graph.balance}) BTC`)
+		console.log(`             ${daily}         ${monthly}`)
+		console.log(`            ${unpaid}          ${balance}`)
 		console.log(' ------------------------------------------------------------------------------------------------------')
 		console.log(` List GPU update at ${graph.update.format('DD MMMM YYYY HH:mm:ss.SSS')} `)
 		graph.gpu.forEach((item) => {
