@@ -44,6 +44,7 @@ let unpaid = () => request({
 	res.result.stats.forEach(item => {
 		graph.unpaid += parseFloat(item.balance)
 	})
+	graph.amount = 0.0 
 	res.result.payments.forEach(item => {
 		graph.amount += parseFloat(item.amount)
 	})
@@ -68,7 +69,7 @@ let colorPower = (temp, unit) => (temp >= 220 ? (temp >= 250 ? chalk.red(temp, u
 let normalization = (gpu) => {
 	if (gpu.temp < min) min = gpu.temp
 	if (gpu.temp > max) max = gpu.temp
-  console.log(`  - GPU#${gpu.index} ${gpu.name} ${parseInt(gpu.memory.total / 1024)}GB --- GPU: ${chalk.magenta(gpu.ugpu)} Memory: ${chalk.magenta((gpu.memory.used * 100 / gpu.memory.total).toFixed(1),'%')} Temperature: ${colorTemp(gpu.temp,'°C')} Power: ${!gpu.power ? chalk.red('N\\A') : colorPower(gpu.power,'W')} Speed: ${!gpu.fan ? chalk.red('N\\A') : gpu.fan}`)
+  console.log(`   - GPU#${gpu.index} ${gpu.name} ${parseInt(gpu.memory.total / 1024)}GB --- GPU: ${chalk.magenta(gpu.ugpu)} Memory: ${chalk.magenta((gpu.memory.used * 100 / gpu.memory.total).toFixed(1),'%')} Temperature: ${colorTemp(gpu.temp,'°C')} Power: ${!gpu.power ? chalk.red('N\\A') : colorPower(gpu.power,'W')} Speed: ${!gpu.fan ? chalk.red('N\\A') : gpu.fan}`)
   if ((gpu.temp >= 85 || gpu.temp < 60) && !isOverheat) {
   	let slack_text = `*GPU#${gpu.index}:* \`${gpu.ugpu}\` Temperature: \`${gpu.temp}°C\` Power: \`${!gpu.power ? 'N\\A' : `${gpu.power} W`}\``
   	let line_text = `GPU#${gpu.index}: ${gpu.ugpu} Temperature: ${gpu.temp}°C P: ${!gpu.power ? 'N\\A' : `${gpu.power} W`}`
@@ -123,13 +124,14 @@ if (process.argv[2]) {
 		let balance = `Balance: ${chalk.green((graph.balance * graph.exchange).toFixed(2),'THB')} (${graph.balance}) BTC`
 		let daily = `Daily: ${chalk.green((graph.amount * graph.exchange).toFixed(2),'THB')} (${graph.amount.toFixed(8)}) BTC`
 		let monthly = `Monthly: ${chalk.green(((graph.amount * 30) * graph.exchange).toFixed(2),'THB')}`
+		let exchange = `(1 BTC = ${graph.exchange} THB)`
 		clear()
 		console.log('')
-		console.log(`                                 Computer Name: ${os.hostname()} [${process.argv[2]}][${graph.gpu.length}]`)
+		console.log(`                      Computer Name: ${os.hostname()} [${process.argv[2]}][${graph.gpu.length}] | ${exchange}`)
 		console.log(`             ${daily}         ${monthly}`)
 		console.log(`            ${unpaid}          ${balance}`)
-		console.log(' ------------------------------------------------------------------------------------------------------')
-		console.log(` List GPU update at ${graph.update.format('DD MMMM YYYY HH:mm:ss.SSS')} `)
+		console.log('  ------------------------------------------------------------------------------------------------------')
+		console.log(`  List GPU update at ${graph.update.format('DD MMMM YYYY HH:mm:ss.SSS')} `)
 		graph.gpu.forEach((item) => {
 			normalization(item)
 		})
