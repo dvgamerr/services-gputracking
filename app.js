@@ -63,9 +63,9 @@ let normalization = (gpu) => {
 	if (gpu.temp < min) min = gpu.temp
 	if (gpu.temp > max) max = gpu.temp
   console.log(`  - GPU#${gpu.index} ${gpu.name} ${parseInt(gpu.memory.total / 1024)}GB --- GPU: ${chalk.magenta(gpu.ugpu)} Memory: ${chalk.magenta((gpu.memory.used * 100 / gpu.memory.total).toFixed(1),'%')} Temperature: ${colorTemp(gpu.temp,'°C')} Power: ${!gpu.power ? chalk.red('N\\A') : colorPower(gpu.power,'W')} Speed: ${!gpu.fan ? chalk.red('N\\A') : gpu.fan}`)
-  if ((gpu.temp >= 85 || gpu.temp < 60 || (gpu.power && gpu.power >= 250)) && !isOverheat) {
+  if ((gpu.temp >= 85 || gpu.temp < 60) && !isOverheat) {
   	let slack_text = `*GPU#${gpu.index}:* \`${gpu.ugpu}\` Temperature: \`${gpu.temp}°C\` Power: \`${!gpu.power ? 'N\\A' : `${gpu.power} W`}\``
-  	let line_text = `GPU#${gpu.index}: ${gpu.ugpu} Temperature: ${gpu.temp}°C Power: ${!gpu.power ? 'N\\A' : `${gpu.power} W`}`
+  	let line_text = `GPU#${gpu.index}: ${gpu.ugpu} Temperature: ${gpu.temp}°C P: ${!gpu.power ? 'N\\A' : `${gpu.power} W`}`
 		// slack.hook(`${(process.argv[2] ? `[${process.argv[2]}]` : '')}`, slack_text).then((res) => {
 		// 	if (res === 'ok') console.log('error', res)
 		// })
