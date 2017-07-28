@@ -71,7 +71,7 @@ let normalization = (gpu) => {
 }
 
 if (process.argv[2]) {
-	r.connect({ host: 'localhost', port: 28015 }, function(err, conn) {
+	r.connect({ host: 'aws.touno.co', port: 6511 }, function(err, conn) {
 		conn.use('miner')
 		nvidia.watch({ interval: 1 })
 		nvidia.on('gpu', gpu => {
