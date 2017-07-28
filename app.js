@@ -7,6 +7,11 @@ const moment 	= require('moment')
 const r 			= require('rethinkdb')
 const cron 		= require('cron')
 
+const line = require('@line/bot-sdk');
+const client = new line.Client({
+  channelAccessToken: 'aLWtThxKjje3XZPX9MMczLk/0tHwqCN7OVcfbfLSKFAMb8aLSL7VGW9xX/SeSCCEjE/N8TEiKTMJmOzWPrPvx3Ki03ezUhlS8CE8XkKNOLjlugrrXbD5lrpD4IAsehEleBS+mNcAjfLTtRim7qaeWQdB04t89/1O/w1cDnyilFU='
+});
+
 const nvidia 	= require('./nvidia-smi')
 const slack 	= require('./slack-webhook')
 // **GPU#0** GeForce GTX 1080 Ti 11GB - Temperature: `84 °C` Power: `245.54 W`
@@ -58,11 +63,20 @@ let normalization = (gpu) => {
 	if (gpu.temp < min) min = gpu.temp
 	if (gpu.temp > max) max = gpu.temp
   console.log(`  - GPU#${gpu.index} ${gpu.name} ${parseInt(gpu.memory.total / 1024)}GB --- GPU: ${chalk.magenta(gpu.ugpu)} Memory: ${chalk.magenta((gpu.memory.used * 100 / gpu.memory.total).toFixed(1),'%')} Temperature: ${colorTemp(gpu.temp,'°C')} Power: ${!gpu.power ? chalk.red('N\\A') : colorPower(gpu.power,'W')} Speed: ${!gpu.fan ? chalk.red('N\\A') : gpu.fan}`)
-  if ((gpu.temp >= 85 || gpu.temp < 60) && !isOverheat) {
-  	let message = `*GPU#${gpu.index}:* \`${gpu.ugpu}\` Temperature: \`${gpu.temp}°C\` Power: \`${!gpu.power ? 'N\\A' : `${gpu.power} W`}\``
-		slack.hook(`${(process.argv[2] ? `[${process.argv[2]}]` : '')}`, message).then((res) => {
-			if (res === 'ok') console.log('error', res)
-		})
+  if ((gpu.temp >= 85 || gpu.temp < 60 || (gpu.power && gpu.power >= 250)) && !isOverheat) {
+  	let slack_text = `*GPU#${gpu.index}:* \`${gpu.ugpu}\` Temperature: \`${gpu.temp}°C\` Power: \`${!gpu.power ? 'N\\A' : `${gpu.power} W`}\``
+  	let line_text = `GPU#${gpu.index}: ${gpu.ugpu} Temperature: ${gpu.temp}°C Power: ${!gpu.power ? 'N\\A' : `${gpu.power} W`}`
+		// slack.hook(`${(process.argv[2] ? `[${process.argv[2]}]` : '')}`, slack_text).then((res) => {
+		// 	if (res === 'ok') console.log('error', res)
+		// })
+
+
+		client.pushMessage('U99a557887fe970d1e51dcef21f2fc278', { type: 'text', text: line_text }).then(() => {
+		  
+		}).catch((err) => {
+		  console.log(err)
+		});
+
   	isOverheat = true
   	atOverheat = new Date()
   } else if (isOverheat) {
