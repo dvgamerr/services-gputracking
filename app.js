@@ -58,7 +58,7 @@ let normalization = (gpu) => {
 	if (gpu.temp < min) min = gpu.temp
 	if (gpu.temp > max) max = gpu.temp
   console.log(`  - GPU#${gpu.index} ${gpu.name} ${parseInt(gpu.memory.total / 1024)}GB --- GPU: ${chalk.magenta(gpu.ugpu)} Memory: ${chalk.magenta((gpu.memory.used * 100 / gpu.memory.total).toFixed(1),'%')} Temperature: ${colorTemp(gpu.temp,'°C')} Power: ${!gpu.power ? chalk.red('N\\A') : colorPower(gpu.power,'W')} Speed: ${!gpu.fan ? chalk.red('N\\A') : gpu.fan}`)
-  if ((gpu.temp >= 85 || gpu.temp < 20) && !isOverheat) {
+  if ((gpu.temp >= 85 || gpu.temp < 60) && !isOverheat) {
   	let message = `*GPU#${gpu.index}:* \`${gpu.ugpu}\` Temperature: \`${gpu.temp}°C\` Power: \`${!gpu.power ? 'N\\A' : `${gpu.power} W`}\``
 		slack.hook(`${(process.argv[2] ? `[${process.argv[2]}]` : '')}`, message).then((res) => {
 			if (res === 'ok') console.log('error', res)
@@ -103,7 +103,7 @@ if (process.argv[2]) {
 		console.log('')
 		console.log(`                                 Computer Name: ${os.hostname()} [${process.argv[2]}][${graph.gpu.length}]`)
 		console.log(`                                        INFO.DVGAMER@GMAIL.COM`)
-		console.log(`            ${`Unpaid: ${chalk.blue((graph.unpaid * graph.exchange).toFixed(2),'THB')} (${graph.unpaid}) BTC          Balance: ${chalk.blue((graph.balance * graph.exchange).toFixed(2),'THB')}`} (${graph.balance}) BTC`)
+		console.log(`            ${`Unpaid: ${chalk.green((graph.unpaid * graph.exchange).toFixed(2),'THB')} (${graph.unpaid}) BTC          Balance: ${chalk.green((graph.balance * graph.exchange).toFixed(2),'THB')}`} (${graph.balance}) BTC`)
 		console.log(' ------------------------------------------------------------------------------------------------------')
 		console.log(` List GPU update at ${graph.update.format('DD MMMM YYYY HH:mm:ss.SSS')} `)
 		graph.gpu.forEach((item) => {
