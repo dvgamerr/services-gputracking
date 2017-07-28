@@ -17,7 +17,7 @@ const slack 	= require('./slack-webhook')
 let isOverheat = false, atOverheat = null
 let min = 100, max = 0
 let graph = {
-	update: new Date(),
+	update: moment(),
 	payment: null,
 	exchange: 0,
 	balance: 0.0,
