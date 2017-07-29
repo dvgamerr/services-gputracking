@@ -65,10 +65,32 @@ let balance = () => request({
 	json: true
 }).then(res => {
 	graph.balance = res.result.balance_confirmed
+	let msg = `Balance your is ${numeral(graph.balance * graph.exchange).format('0,0.00')} THB ${graph.balance} BTC`
+	client.pushMessage('U99a557887fe970d1e51dcef21f2fc278', { type: 'text', text: msg }).catch((err) => {
+	  console.log(err)
+	})
+	
 	// console.log('balance_confirmed', res.result.balance_confirmed)
 }).catch((err) => {
   console.log(err)
 });
+
+let getMessage = () => {
+	let unpaid = `You will be paid about ${numeral(graph.unpaid * graph.exchange).format('0,0.00')} THB
+${numeral(graph.unpaid).format('0.00000000')} BTC`
+	let daily = `Daily income ${numeral(graph.amount * graph.exchange).format('0,0.00')} THB
+${numeral(graph.amount).format('0.00000000')} BTC`
+	let monthly = `Monthly income ${numeral((graph.amount * 30) * graph.exchange).format('0,0.00')} THB 
+${numeral(graph.amount * 30).format('0.00000000')} BTC`
+	let exchange = `Exchange rate BTC is ${numeral(graph.exchange).format('0,0.00')} THB)`
+
+	let msg = `${daily}
+${monthly}
+${exchange}`
+	client.pushMessage('U99a557887fe970d1e51dcef21f2fc278', { type: 'text', text: unpaid }).then(() => {
+	  return client.pushMessage('U99a557887fe970d1e51dcef21f2fc278', { type: 'text', text: msg })
+	});
+}
 
 let colorTemp = temp => (temp >= 80 ? (temp >= 90 ? temp : temp) : temp);
 let colorPower = temp => (temp >= 220 ? (temp >= 250 ? temp : temp) : temp);
@@ -80,17 +102,11 @@ let normalization = (gpu, i) => {
 
   if ((gpu.temp >= 85 || gpu.temp < 60) && !isOverheat) {
   	let slack_text = `*GPU#${gpu.index}:* \`${gpu.ugpu}\` Temperature: \`${gpu.temp}°C\` Power: \`${!gpu.power ? 'N\\A' : `${gpu.power} W`}\``
-  	let line_text = `${gpu.name}#${gpu.index}
- GPU: ${gpu.ugpu} Temperature: ${gpu.temp}°C P: ${!gpu.power ? 'N\\A' : `${gpu.power} W`}`
-		// slack.hook(`${(process.argv[2] ? `[${process.argv[2]}]` : '')}`, slack_text).then((res) => {
-		// 	if (res === 'ok') console.log('error', res)
-		// })
-
-		client.pushMessage('U99a557887fe970d1e51dcef21f2fc278', { type: 'text', text: line_text }).then(() => {
-		  
-		}).catch((err) => {
-		  console.log(err)
-		});
+  	let line_text = `${gpu.index}#${gpu.name}
+GPU: ${gpu.ugpu} Temperature: ${gpu.temp}°C P: ${!gpu.power ? 'N\\A' : `${numeral(gpu.power).format(0)} W`}`
+		slack.hook(`${(process.argv[2] ? `[${process.argv[2]}]` : '')}`, slack_text).then((res) => {
+			// if (res === 'ok') console.log('error', res)
+		})
 
   	isOverheat = true
   	atOverheat = new Date()
@@ -154,13 +170,23 @@ if (process.argv[2]) {
 		term.white('\n')
 	}, 1000)
 
-	unpaid()
-	exchange()
+	exchange().then(() => {
+		return unpaid()
+	})
+	
 
 	// Get Unpaid balance
 	new cron.CronJob({
 	  cronTime: '* * * * *',
 	  onTick: unpaid,
+	  start: true,
+	  timeZone: 'Asia/Bangkok'
+	});
+
+	// Get Unpaid balance
+	new cron.CronJob({
+	  cronTime: '50 18 * * *',
+	  onTick: getMessage,
 	  start: true,
 	  timeZone: 'Asia/Bangkok'
 	});
