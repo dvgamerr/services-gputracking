@@ -3,6 +3,7 @@ const term 		= require( 'terminal-kit' ).terminal
 const os 			= require('os')
 const request = require('request-promise')
 const moment 	= require('moment')
+const numeral = require('numeral')
 const r 			= require('rethinkdb')
 const cron 		= require('cron')
 
@@ -33,7 +34,9 @@ let exchange = () => request({
 }).then(res => {
 	graph.exchange = res['THB'].sell
 	// console.log(`${res['THB'].sell} ${res['THB'].symbol}`)
-})
+}).catch((err) => {
+  console.log(err)
+});
 
 let unpaid = () => request({
 	url: `https://api.nicehash.com/api?method=stats.provider&addr=386kZA5f7XkBrehmUxpMHeEkEQJ9TvTqWB`,
@@ -53,7 +56,9 @@ let unpaid = () => request({
 		graph.payment = res.result.payments[0].time
 		balance()
 	}
-})
+}).catch((err) => {
+  console.log(err)
+});
 
 let balance = () => request({
 	url: `https://api.nicehash.com/api?method=balance&id=195158&key=c81830fc-2f6b-4f60-b6dc-cca004113809`,
@@ -61,22 +66,25 @@ let balance = () => request({
 }).then(res => {
 	graph.balance = res.result.balance_confirmed
 	// console.log('balance_confirmed', res.result.balance_confirmed)
-})
+}).catch((err) => {
+  console.log(err)
+});
 
-let colorTemp = (temp, unit) => (temp >= 80 ? (temp >= 90 ? (temp, unit) : (temp, unit)) : (temp, unit));
-let colorPower = (temp, unit) => (temp >= 220 ? (temp >= 250 ? (temp, unit) : (temp, unit)) : (temp, unit));
+let colorTemp = temp => (temp >= 80 ? (temp >= 90 ? temp : temp) : temp);
+let colorPower = temp => (temp >= 220 ? (temp >= 250 ? temp : temp) : temp);
 let normalization = (gpu, i) => {
 	if (gpu.temp < min) min = gpu.temp
 	if (gpu.temp > max) max = gpu.temp
 
-	term.moveTo(1, 6+i , `- GPU#${gpu.index} ${gpu.name} ${parseInt(gpu.memory.total / 1024)}GB --- GPU: ${(gpu.ugpu)} Memory: ${((gpu.memory.used * 100 / gpu.memory.total).toFixed(1),'%')} Temperature: ${colorTemp(gpu.temp,'°C')} Power: ${!gpu.power ? ('N\\A') : colorPower(gpu.power,'W')} Speed: ${!gpu.fan ? ('N\\A') : gpu.fan}`)
+	term.moveTo(1, 6+i , `- GPU#${gpu.index} ${gpu.name} ${parseInt(gpu.memory.total / 1024)}GB --- GPU: ${(gpu.ugpu)} Memory: ${(gpu.memory.used * 100 / gpu.memory.total).toFixed(1)}% Temperature: ${colorTemp(gpu.temp)}°C Power: ${!gpu.power ? ('N\\A') : colorPower(gpu.power)} W Speed: ${!gpu.fan ? ('N\\A') : gpu.fan}`)
+
   if ((gpu.temp >= 85 || gpu.temp < 60) && !isOverheat) {
   	let slack_text = `*GPU#${gpu.index}:* \`${gpu.ugpu}\` Temperature: \`${gpu.temp}°C\` Power: \`${!gpu.power ? 'N\\A' : `${gpu.power} W`}\``
-  	let line_text = `GPU#${gpu.index}: ${gpu.ugpu} Temperature: ${gpu.temp}°C P: ${!gpu.power ? 'N\\A' : `${gpu.power} W`}`
+  	let line_text = `${gpu.name}#${gpu.index}
+ GPU: ${gpu.ugpu} Temperature: ${gpu.temp}°C P: ${!gpu.power ? 'N\\A' : `${gpu.power} W`}`
 		// slack.hook(`${(process.argv[2] ? `[${process.argv[2]}]` : '')}`, slack_text).then((res) => {
 		// 	if (res === 'ok') console.log('error', res)
 		// })
-
 
 		client.pushMessage('U99a557887fe970d1e51dcef21f2fc278', { type: 'text', text: line_text }).then(() => {
 		  
@@ -121,11 +129,11 @@ if (process.argv[2]) {
 
 
 	setInterval(() => {
-		let unpaid = `Unpaid: ${(graph.unpaid * graph.exchange).toFixed(2)} THB (${(graph.unpaid).toFixed(8)}) BTC`
-		let balance = `Balance: ${(graph.balance * graph.exchange).toFixed(2)} THB (${graph.balance}) BTC`
-		let daily = `Daily: ${(graph.amount * graph.exchange).toFixed(2)} THB (${graph.amount.toFixed(8)}) BTC`
-		let monthly = `Monthly: ${((graph.amount * 30) * graph.exchange).toFixed(2)} THB`
-		let exchange = `(1 BTC = ${graph.exchange} THB)`
+		let unpaid = `Unpaid: ${numeral(graph.unpaid * graph.exchange).format('0,0.00')} THB (${(graph.unpaid).toFixed(8)}) BTC`
+		let balance = `Balance: ${numeral(graph.balance * graph.exchange).format('0,0.00')} THB (${graph.balance}) BTC`
+		let daily = `Daily: ${numeral(graph.amount * graph.exchange).format('0,0.00')} THB (${graph.amount.toFixed(8)}) BTC`
+		let monthly = `Monthly: ${numeral((graph.amount * 30) * graph.exchange).format('0,0.00')} THB`
+		let exchange = `(1 BTC = ${numeral(graph.exchange).format('0,0.00')} THB)`
 
 		// console.log('')
 		// console.log(`                      Computer Name: ${os.hostname()} [${process.argv[2]}][${graph.gpu.length}] | ${exchange}`)
@@ -133,12 +141,12 @@ if (process.argv[2]) {
 		// console.log(`            ${unpaid}          ${balance}`)
 		// console.log('  ------------------------------------------------------------------------------------------------------')
 		// console.log(`  List GPU update at ${graph.update.format('DD MMMM YYYY HH:mm:ss.SSS')} `)
-
-		term.white('\n')
-		term.moveTo(1,1, `Computer Name: ${os.hostname()} [${process.argv[2]}][${graph.gpu.length}] | ${exchange}`) ;
-		term.moveTo(1,2, `${daily}         ${monthly}`) ;
-		term.moveTo(1,3, `${unpaid}          ${balance}`) ;
-		term.moveTo(1,4, '------------------------------------------------------------------------------------------------------')
+		let header = `Computer Name: ${os.hostname()} [${process.argv[2]}][${graph.gpu.length}]`
+		term.moveTo((term.width / 2) - (header.length / 2),2, header)
+		term.moveTo(10,3, exchange)
+		term.moveTo(40,3, daily)
+		term.moveTo(80,3, monthly)
+		term.moveTo(1,4, `${unpaid}          ${balance}`) ;
 		term.moveTo(1,5, `List GPU update at ${graph.update.format('DD MMMM YYYY HH:mm:ss.SSS')}`)
 		graph.gpu.forEach((item, i) => {
 			normalization(item, i)
