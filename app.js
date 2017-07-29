@@ -65,7 +65,7 @@ let balance = () => request({
 	json: true
 }).then(res => {
 	graph.balance = res.result.balance_confirmed
-	let msg = `Balance your is ${numeral(graph.balance * graph.exchange).format('0,0.00')} THB ${graph.balance} BTC`
+	let msg = `Balance ${numeral(graph.balance * graph.exchange).format('0,0.00')} THB (${graph.balance} BTC)`
 	client.pushMessage('U99a557887fe970d1e51dcef21f2fc278', { type: 'text', text: msg }).catch((err) => {
 	  console.log(err)
 	})
