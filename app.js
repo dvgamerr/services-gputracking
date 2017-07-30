@@ -125,7 +125,7 @@ let normalization = (gpu, i) => {
 	term.bold.moveTo(12 + name.length + gpu.ugpu.length + mem.length, 8+i, `Temperature: `)
 	term.bold.cyan.moveTo(25 + name.length + gpu.ugpu.length + mem.length, 8+i, temp)
 	term.bold.moveTo(26 + name.length + gpu.ugpu.length + mem.length + temp.length, 8+i, `Power: `)
-	if (!gpu.power) gpu.power = 'N/A'
+	if (!gpu.power) gpu.power = 'N/A'; else gpu.power += ' W   ';
 
 	let p_x = 33 + name.length + gpu.ugpu.length + mem.length + temp.length
 	if (gpu.power >= 250) {
