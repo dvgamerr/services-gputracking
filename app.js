@@ -126,11 +126,11 @@ let normalization = (gpu, i) => {
 
 	let t_x = 25 + name.length + gpu.ugpu.length + mem.length
 	if (gpu.temp >= 250) {
-		term.bold.red.moveTo(p_x, 8+i, `${temp}  `)
+		term.bold.red.moveTo(t_x, 8+i, `${temp}  `)
 	} else if (gpu.temp >= 200) {
-		term.bold.yellow.moveTo(p_x, 8+i, `${temp}  `)
+		term.bold.yellow.moveTo(t_x, 8+i, `${temp}  `)
 	} else {	
-		term.bold.cyan.moveTo(p_x, 8+i, `${temp}  `)
+		term.bold.cyan.moveTo(t_x, 8+i, `${temp}  `)
 	}
 	
 	term.bold.moveTo(26 + name.length + gpu.ugpu.length + mem.length + temp.length, 8+i, `Power: `)
