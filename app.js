@@ -33,6 +33,9 @@ let exchange = () => request({
 	json: true
 }).then(res => {
 	graph.exchange = res['THB'].sell
+	let exchange = `${numeral(graph.exchange).format('0,0.00')} THB`
+	term.blue.bold.moveTo(12,4, exchange)
+	term.moveTo(26,4, `(1 BTC)`)
 	// console.log(`${res['THB'].sell} ${res['THB'].symbol}`)
 }).catch((err) => {
   console.log(err)
@@ -56,6 +59,16 @@ let unpaid = () => request({
 		graph.payment = res.result.payments[0].time
 		balance()
 	}
+	let daily = `${numeral(graph.amount * graph.exchange).format('0,0.00')} THB`
+	let monthly = `${numeral((graph.amount * 30) * graph.exchange).format('0,0.00')} THB`
+	term.green.bold.moveTo((term.width / 2) + 9, 4, daily)
+	term.green.bold.moveTo((term.width / 2) + 9, 5, monthly)
+	term.moveTo((term.width / 2) + 10 + daily.length, 4, `(${numeral(graph.amount).format('0.00000000')} BTC)`)
+	term.moveTo((term.width / 2) + 10 + monthly.length, 5, `(${numeral(graph.amount * 30).format('0.00000000')} BTC)`)
+
+	let unpaid = `${numeral(graph.unpaid * graph.exchange).format('0,0.00')} THB `
+	term.green.bold.moveTo(57,7, unpaid)
+	term.moveTo(57 + unpaid.length, 7, `(${numeral(graph.unpaid).format('0.00000000')} BTC)`)
 }).catch((err) => {
   console.log(err)
 });
@@ -70,7 +83,10 @@ let balance = () => request({
 	  console.log(err)
 	})
 	
-	// console.log('balance_confirmed', res.result.balance_confirmed)
+	let balance = `${numeral(graph.balance * graph.exchange).format('0,0.00')} THB `
+	term.green.bold.moveTo(12,5, balance)
+	term.moveTo(12 + balance.length, 5, `(${numeral(graph.balance).format('0.00000000')} BTC)`)
+
 }).catch((err) => {
   console.log(err)
 });
@@ -98,15 +114,33 @@ let normalization = (gpu, i) => {
 	if (gpu.temp < min) min = gpu.temp
 	if (gpu.temp > max) max = gpu.temp
 
-	term.moveTo(1, 6+i , `- GPU#${gpu.index} ${gpu.name} ${parseInt(gpu.memory.total / 1024)}GB --- GPU: ${(gpu.ugpu)} Memory: ${(gpu.memory.used * 100 / gpu.memory.total).toFixed(1)}% Temperature: ${colorTemp(gpu.temp)}°C Power: ${!gpu.power ? ('N\\A') : colorPower(gpu.power)} W Speed: ${!gpu.fan ? ('N\\A') : gpu.fan}`)
+		// Power: ${!gpu.power ? ('N\\A') : colorPower(gpu.power)} W Speed: ${!gpu.fan ? ('N\\A') : gpu.fan}
+	let name = `- GPU#${gpu.index} ${gpu.name} ${parseInt(gpu.memory.total / 1024)}GB --- GPU: `
+	let mem = `${(gpu.memory.used * 100 / gpu.memory.total).toFixed(1)} %`
+	let temp = `${colorTemp(gpu.temp)}°C`
+	term.bold.moveTo(2, 8+i , name)
+	term.bold.cyan.moveTo(2 + name.length, 8+i, gpu.ugpu)
+	term.bold.moveTo(3 + name.length + gpu.ugpu.length, 8+i, `Memory: `)
+	term.bold.cyan.moveTo(11 + name.length + gpu.ugpu.length, 8+i, mem)
+	term.bold.moveTo(12 + name.length + gpu.ugpu.length + mem.length, 8+i, `Temperature: `)
+	term.bold.cyan.moveTo(25 + name.length + gpu.ugpu.length + mem.length, 8+i, temp)
+	term.bold.moveTo(26 + name.length + gpu.ugpu.length + mem.length + temp.length, 8+i, `Power: `)
+	if (!gpu.power) gpu.power = 'N/A'
+
+	let p_x = 33 + name.length + gpu.ugpu.length + mem.length + temp.length
+	if (gpu.power >= 250) {
+		term.bold.red.moveTo(p_x, 8+i, gpu.power)
+	} else if (gpu.power >= 200) {
+		term.bold.yellow.moveTo(p_x, 8+i, gpu.power)
+	} else {	
+		term.bold.cyan.moveTo(p_x, 8+i, gpu.power)
+	}
 
   if ((gpu.temp >= 85 || gpu.temp < 60) && !isOverheat) {
-  	let slack_text = `*GPU#${gpu.index}:* \`${gpu.ugpu}\` Temperature: \`${gpu.temp}°C\` Power: \`${!gpu.power ? 'N\\A' : `${gpu.power} W`}\``
+  	let slack_text = `*GPU#${gpu.index}:* \`${gpu.ugpu}\` Temperature: \`${gpu.temp}°C\` Power: \`${!gpu.power ? 'N\\A' : `${numeral(gpu.power).format(0)} W`}\``
   	let line_text = `${gpu.index}#${gpu.name}
 GPU: ${gpu.ugpu} Temperature: ${gpu.temp}°C P: ${!gpu.power ? 'N\\A' : `${numeral(gpu.power).format(0)} W`}`
-		slack.hook(`${(process.argv[2] ? `[${process.argv[2]}]` : '')}`, slack_text).then((res) => {
-			// if (res === 'ok') console.log('error', res)
-		})
+		// slack.hook(`${(process.argv[2] ? `[${process.argv[2]}]` : '')}`, slack_text)
 
   	isOverheat = true
   	atOverheat = new Date()
@@ -143,27 +177,28 @@ if (process.argv[2]) {
 		});
   })
 
+	let header = `  Computer Name: ${os.hostname()} [${process.argv[2]}]  `
+	term.bold.white.bgGreen.moveTo((term.width / 2) - (header.length / 2),2, header)
+
+	term.moveTo(2,4, `Exchange:`)
+	term.blue.bold.moveTo(12,4, `0.00 THB`)
+
+	term.moveTo((term.width / 2) + 2,4, `Daily:`)
+	term.green.bold.moveTo((term.width / 2) + 9,4, `0.00 THB`)
+
+	term.moveTo((term.width / 2),5, `Monthly:`)
+	term.green.bold.moveTo((term.width / 2) + 9,5, `0.00 THB`)
+
+	term.moveTo(3,5, `Balance:`)
+	term.green.bold.moveTo(12,5, `0.00 THB`)
+
+	term.moveTo(2,7, `List GPU update at `)
+
+	term.moveTo(47,7, `| unpaid:`)
+	term.green.bold.moveTo(57,7, `0.00 THB`)
 
 	setInterval(() => {
-		let unpaid = `Unpaid: ${numeral(graph.unpaid * graph.exchange).format('0,0.00')} THB (${(graph.unpaid).toFixed(8)}) BTC`
-		let balance = `Balance: ${numeral(graph.balance * graph.exchange).format('0,0.00')} THB (${graph.balance}) BTC`
-		let daily = `Daily: ${numeral(graph.amount * graph.exchange).format('0,0.00')} THB (${graph.amount.toFixed(8)}) BTC`
-		let monthly = `Monthly: ${numeral((graph.amount * 30) * graph.exchange).format('0,0.00')} THB`
-		let exchange = `(1 BTC = ${numeral(graph.exchange).format('0,0.00')} THB)`
-
-		// console.log('')
-		// console.log(`                      Computer Name: ${os.hostname()} [${process.argv[2]}][${graph.gpu.length}] | ${exchange}`)
-		// console.log(`             ${daily}         ${monthly}`)
-		// console.log(`            ${unpaid}          ${balance}`)
-		// console.log('  ------------------------------------------------------------------------------------------------------')
-		// console.log(`  List GPU update at ${graph.update.format('DD MMMM YYYY HH:mm:ss.SSS')} `)
-		let header = `Computer Name: ${os.hostname()} [${process.argv[2]}][${graph.gpu.length}]`
-		term.moveTo((term.width / 2) - (header.length / 2),2, header)
-		term.moveTo(10,3, exchange)
-		term.moveTo(40,3, daily)
-		term.moveTo(80,3, monthly)
-		term.moveTo(1,4, `${unpaid}          ${balance}`) ;
-		term.moveTo(1,5, `List GPU update at ${graph.update.format('DD MMMM YYYY HH:mm:ss.SSS')}`)
+		term.yellow.bold.moveTo(21,7, graph.update.format('DD MMMM YYYY HH:mm:ss.SSS'))
 		graph.gpu.forEach((item, i) => {
 			normalization(item, i)
 		})
