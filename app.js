@@ -216,6 +216,8 @@ if (process.argv[2]) {
 
 	exchange().then(() => {
 		return unpaid()
+	// }).then(() => {
+	// 	return getMessage()
 	})
 	
 
@@ -229,7 +231,7 @@ if (process.argv[2]) {
 
 	// Get Unpaid balance
 	new cron.CronJob({
-	  cronTime: '50 18 * * *',
+	  cronTime: '45 17 * * *',
 	  onTick: getMessage,
 	  start: true,
 	  timeZone: 'Asia/Bangkok'
