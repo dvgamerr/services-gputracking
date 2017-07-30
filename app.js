@@ -117,13 +117,22 @@ let normalization = (gpu, i) => {
 		// Power: ${!gpu.power ? ('N\\A') : colorPower(gpu.power)} W Speed: ${!gpu.fan ? ('N\\A') : gpu.fan}
 	let name = `- GPU#${gpu.index} ${gpu.name} ${parseInt(gpu.memory.total / 1024)}GB --- GPU: `
 	let mem = `${(gpu.memory.used * 100 / gpu.memory.total).toFixed(1)} %`
-	let temp = `${colorTemp(gpu.temp)}°C`
+	let temp = `${gpu.temp}°C`
 	term.bold.moveTo(2, 8+i , `${name}  `)
 	term.bold.cyan.moveTo(2 + name.length, 8+i, `${gpu.ugpu}  `)
 	term.bold.moveTo(3 + name.length + gpu.ugpu.length, 8+i, `Memory: `)
 	term.bold.cyan.moveTo(11 + name.length + gpu.ugpu.length, 8+i, `${mem}  `)
 	term.bold.moveTo(12 + name.length + gpu.ugpu.length + mem.length, 8+i, `Temperature: `)
-	term.bold.cyan.moveTo(25 + name.length + gpu.ugpu.length + mem.length, 8+i, `${temp}  `)
+
+	let t_x = 25 + name.length + gpu.ugpu.length + mem.length
+	if (gpu.temp >= 250) {
+		term.bold.red.moveTo(p_x, 8+i, `${temp}  `)
+	} else if (gpu.temp >= 200) {
+		term.bold.yellow.moveTo(p_x, 8+i, `${temp}  `)
+	} else {	
+		term.bold.cyan.moveTo(p_x, 8+i, `${temp}  `)
+	}
+	
 	term.bold.moveTo(26 + name.length + gpu.ugpu.length + mem.length + temp.length, 8+i, `Power: `)
 	if (!gpu.power) gpu.power = 'N/A'; else gpu.power += ` W     `;
 
