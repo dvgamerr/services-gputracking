@@ -18,6 +18,8 @@ const slack 	= require('./slack-webhook')
 let isOverheat = false, atOverheat = null
 let min = 100, max = 0
 let graph = {
+	error: 0,
+	days: 1,
 	update: moment(),
 	payment: null,
 	exchange: 0,
@@ -38,7 +40,7 @@ let exchange = () => request({
 	term.moveTo(26,4, `(1 BTC)`)
 	// console.log(`${res['THB'].sell} ${res['THB'].symbol}`)
 }).catch((err) => {
-  console.log(err)
+  graph.error += 1
 });
 
 let unpaid = () => request({
@@ -50,10 +52,15 @@ let unpaid = () => request({
 		graph.unpaid += parseFloat(item.balance)
 	})
 	graph.amount = 0.0 
+	let last = null
+
+	graph.days = 0
 	res.result.payments.forEach(item => {
 		graph.amount += parseFloat(item.amount)
+		if (last) graph.days += (last.diff(moment(item.time).hour(0).minutes(0).seconds(0)) / 86400000)
+		last = moment(item.time).hour(0).minutes(0).seconds(0)
 	})
-	graph.amount = graph.amount / res.result.payments.length
+	graph.amount = graph.amount / graph.days
 
 	if (res.result.payments.length > 0 && graph.payment != res.result.payments[0].time) {
 		graph.payment = res.result.payments[0].time
@@ -70,7 +77,7 @@ let unpaid = () => request({
 	term.green.bold.moveTo(57,7, unpaid)
 	term.moveTo(57 + unpaid.length, 7, `(${numeral(graph.unpaid).format('0.00000000')} BTC)`)
 }).catch((err) => {
-  console.log(err)
+  graph.error += 1
 });
 
 let balance = () => request({
@@ -80,15 +87,15 @@ let balance = () => request({
 	graph.balance = res.result.balance_confirmed
 	let msg = `Balance ${numeral(graph.balance * graph.exchange).format('0,0.00')} THB (${graph.balance} BTC)`
 	client.pushMessage('U99a557887fe970d1e51dcef21f2fc278', { type: 'text', text: msg }).catch((err) => {
-	  console.log(err)
-	})
+	  graph.error += 1
+	});
 	
 	let balance = `${numeral(graph.balance * graph.exchange).format('0,0.00')} THB `
 	term.green.bold.moveTo(12,5, balance)
 	term.moveTo(12 + balance.length, 5, `(${numeral(graph.balance).format('0.00000000')} BTC)`)
 
 }).catch((err) => {
-  console.log(err)
+  graph.error += 1
 });
 
 let getMessage = () => {
@@ -105,6 +112,8 @@ ${monthly}
 ${exchange}`
 	client.pushMessage('U99a557887fe970d1e51dcef21f2fc278', { type: 'text', text: unpaid }).then(() => {
 	  return client.pushMessage('U99a557887fe970d1e51dcef21f2fc278', { type: 'text', text: msg })
+	}).catch((err) => {
+	  graph.error += 1
 	});
 }
 
