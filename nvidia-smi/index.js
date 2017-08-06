@@ -1,7 +1,7 @@
 const fs 			= require('fs')
 const moment 	= require('moment')
 const events 	= require('events')
-const spawn 		= require('child_process').spawn
+const spawn 	= require('child_process').spawn
 const emiter 	= new events.EventEmitter()
 
 let query = [
