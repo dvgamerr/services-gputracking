@@ -99,13 +99,10 @@ let balance = () => request({
 
 let getMessage = () => {
 	const client = new line.Client({ channelAccessToken: access_token })
-	let unpaid = `You will be paid about ${numeral(graph.unpaid * graph.exchange).format('0,0.00')} THB
-${numeral(graph.unpaid).format('0.00000000')} BTC`
-	let daily = `Daily income ${numeral(graph.amount * graph.exchange).format('0,0.00')} THB
-${numeral(graph.amount).format('0.00000000')} BTC`
-	let monthly = `Monthly income ${numeral((graph.amount * 30) * graph.exchange).format('0,0.00')} THB 
-${numeral(graph.amount * 30).format('0.00000000')} BTC`
-	let exchange = `Exchange rate BTC is ${numeral(graph.exchange).format('0,0.00')} THB)`
+	let unpaid = `You will be paid about ${numeral(graph.unpaid * graph.exchange).format('0,0.00')} THB`
+	let daily = `Daily income ${numeral(graph.amount * graph.exchange).format('0,0.00')} THB`
+	let monthly = `Monthly income ${numeral((graph.amount * 30) * graph.exchange).format('0,0.00')} THB`
+	let exchange = `Exchange rate BTC is ${numeral(graph.exchange).format('0,0.00')} THB`
 
 	let msg = `${daily}
 ${monthly}
@@ -240,8 +237,16 @@ if (process.argv[2]) {
 
 	// Get Unpaid balance
 	new cron.CronJob({
-	  cronTime: '45 17 * * *',
+	  cronTime: '45 16 * * *',
 	  onTick: getMessage,
+	  start: true,
+	  timeZone: 'Asia/Bangkok'
+	});
+
+	// Get Unpaid balance
+	new cron.CronJob({
+	  cronTime: '10 17 * * *',
+	  onTick: balance,
 	  start: true,
 	  timeZone: 'Asia/Bangkok'
 	});

@@ -40,6 +40,19 @@ let exchange = () => request({
   graph.error += 1
 });
 
+let exchange_coins = () => request({
+	url: `https://quote.coins.ph/v1/markets/BTC-THB`,
+	json: true
+}).then(res => {
+	graph.exchange = res.market.bid
+	// let exchange = `${numeral(graph.exchange).format('0,0.00')} THB`
+	// term.blue.bold.moveTo(12,4, exchange)
+	// console.log(`(1 BTC)`)
+	console.log(`${res.market.bid}`)
+}).catch((err) => {
+  graph.error += 1
+});
+
 let unpaid = () => request({
 	url: `https://api.nicehash.com/api?method=stats.provider&addr=386kZA5f7XkBrehmUxpMHeEkEQJ9TvTqWB`,
 	json: true
@@ -104,8 +117,9 @@ ${numeral(graph.amount * 30).format('0.00000000')} BTC`
 	let msg = `${daily}
 ${monthly}
 ${exchange}`
-}
+	console.log(msg)
 
-exchange().then(()=> {
+}
+exchange_coins().then(()=> {
 	return unpaid()
 })
