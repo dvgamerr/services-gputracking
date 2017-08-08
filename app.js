@@ -152,7 +152,7 @@ let normalization = (gpu, i) => {
 	}
 
   if ((gpu.temp >= 85 || gpu.temp < 60) && !isOverheat) {
-  	let slack_text = `*GPU#${gpu.index}:* \`${gpu.ugpu}\` Temperature: \`${gpu.temp}°C\` Power: \`${!gpu.power ? 'N\\A' : `${numeral(gpu.power).format(0)} W`}\``
+  	let slack_text = `[${moment().format('HH:MM:ss')}] *GPU#${gpu.index}:* \`${gpu.ugpu}\` TEMP: \`${gpu.temp}°C\` POWER: \`${!gpu.power ? 'N\\A' : `${numeral(gpu.power).format(0)} W`}\``
   	let line_text = `${gpu.index}#${gpu.name}
 GPU: ${gpu.ugpu} Temperature: ${gpu.temp}°C P: ${!gpu.power ? 'N\\A' : `${numeral(gpu.power).format(0)} W`}`
 		slack.hook(`${(process.argv[2] ? `[${process.argv[2]}]` : '')}`, slack_text)
