@@ -7,6 +7,11 @@ const numeral = require('numeral')
 const r 			= require('rethinkdb')
 const cron 		= require('cron')
 
+const apiId = process.env.NICEHASH_ID
+const apiKey = process.env.NICEHASH_KEY
+const wallet = process.env.NICEHASH_WALLET
+const msgID = 'U99a557887fe970d1e51dcef21f2fc278'
+
 const line = require('@line/bot-sdk');
 const access_token = 'aLWtThxKjje3XZPX9MMczLk/0tHwqCN7OVcfbfLSKFAMb8aLSL7VGW9xX/SeSCCEjE/N8TEiKTMJmOzWPrPvx3Ki03ezUhlS8CE8XkKNOLjlugrrXbD5lrpD4IAsehEleBS+mNcAjfLTtRim7qaeWQdB04t89/1O/w1cDnyilFU='
 const nvidia 	= require('./nvidia-smi')
@@ -40,7 +45,7 @@ let exchange = () => request({
 });
 
 let unpaid = () => request({
-	url: `https://api.nicehash.com/api?method=stats.provider&addr=386kZA5f7XkBrehmUxpMHeEkEQJ9TvTqWB`,
+	url: `https://api.nicehash.com/api?method=stats.provider&addr=${wallet}`,
 	json: true
 }).then(res => {
 	graph.unpaid = 0.0 
@@ -77,17 +82,16 @@ let unpaid = () => request({
 });
 
 let balance = () => request({
-	url: `https://api.nicehash.com/api?method=balance&id=195158&key=c81830fc-2f6b-4f60-b6dc-cca004113809`,
+	url: `https://api.nicehash.com/api?method=balance&id=${apiId}&key=${apiKey}`,
 	json: true
 }).then(res => {
 	const client = new line.Client({ channelAccessToken: access_token });
 
-
 	graph.balance = res.result.balance_confirmed
 	let msg = `Balance ${numeral(graph.balance * graph.exchange).format('0,0.00')} THB (${graph.balance} BTC)`
-	client.pushMessage('U99a557887fe970d1e51dcef21f2fc278', { type: 'text', text: msg }).catch((err) => {
+	client.pushMessage(msgID, { type: 'text', text: msg }).catch((err) => {
 	  graph.error += 1
-	});
+	})
 	
 	let balance = `${numeral(graph.balance * graph.exchange).format('0,0.00')} THB `
 	term.green.bold.moveTo(12,5, balance)
@@ -98,20 +102,24 @@ let balance = () => request({
 });
 
 let getMessage = () => {
-	const client = new line.Client({ channelAccessToken: access_token })
-	let unpaid = `You will be paid about ${numeral(graph.unpaid * graph.exchange).format('0,0.00')} THB`
-	let daily = `Daily income ${numeral(graph.amount * graph.exchange).format('0,0.00')} THB`
-	let monthly = `Monthly income ${numeral((graph.amount * 30) * graph.exchange).format('0,0.00')} THB`
-	let exchange = `Exchange rate BTC is ${numeral(graph.exchange).format('0,0.00')} THB`
+	try {
+		const client = new line.Client({ channelAccessToken: access_token })
+		let unpaid = `You will be paid about ${numeral(graph.unpaid * graph.exchange).format('0,0.00')} THB`
+		let daily = `Daily income ${numeral(graph.amount * graph.exchange).format('0,0.00')} THB`
+		let monthly = `Monthly income ${numeral((graph.amount * 30) * graph.exchange).format('0,0.00')} THB`
+		let exchange = `Exchange rate BTC is ${numeral(graph.exchange).format('0,0.00')} THB`
 
-	let msg = `${daily}
+		let msg = `${daily}
 ${monthly}
 ${exchange}`
-	client.pushMessage('U99a557887fe970d1e51dcef21f2fc278', { type: 'text', text: unpaid }).then(() => {
-	  return client.pushMessage('U99a557887fe970d1e51dcef21f2fc278', { type: 'text', text: msg })
-	}).catch((err) => {
+		client.pushMessage(msgID, { type: 'text', text: unpaid }).then(() => {
+		  return client.pushMessage(msgID, { type: 'text', text: msg })
+		}).catch((err) => {
+		  graph.error += 1
+		})
+	} catch (ex) {
 	  graph.error += 1
-	});
+	}
 }
 
 let colorTemp = temp => (temp >= 80 ? (temp >= 90 ? temp : temp) : temp);
@@ -214,16 +222,19 @@ if (process.argv[2]) {
 
 	setInterval(() => {
 		term.yellow.bold.moveTo(21,7, graph.update.format('DD MMMM YYYY HH:mm:ss.SSS'))
+		term.moveTo(5,6, `ERROR:`)
+		term.red.bold.moveTo(12,6, graph.error)
+
 		graph.gpu.forEach((item, i) => {
 			normalization(item, i)
 		})
 		term.white('\n')
 	}, 1000)
-
+	term.white('')
 	exchange().then(() => {
 		return unpaid()
-	// }).then(() => {
-	// 	return getMessage()
+	}).then(() => {
+		return getMessage()
 	})
 	
 
