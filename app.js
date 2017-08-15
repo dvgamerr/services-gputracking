@@ -71,9 +71,10 @@ let provider = () => request({
 }).then(res => {
 	if (!res.result.error) {
 		let mine = res.result.past
-		let second = 0
-		let unpaid = 0
+		let max = 0
 		for (let i = 0; i < mine.length; i++) {
+			let second = 0
+			let unpaid = 0
 			for (let l = 0; l < mine[i].data.length - 1; l++) {
 				let miner = parseFloat(mine[i].data[l+1][2]) - parseFloat(mine[i].data[l][2])
 				if (miner > 0) {
@@ -81,9 +82,11 @@ let provider = () => request({
 					unpaid += miner
 				}
 			}
+			let day = (unpaid / Math.floor(second / 3600)) * 24
+			if (day > max) max = day
 		}
 		// console.log(`algo '${ALGO[mine[i].algo]}' Profit: ${numeral((unpaid / hour) * 24).format('0.00000000')} BTC/Day`)
-		graph.amount = (unpaid / Math.floor(second / 3600)) * 24
+		graph.amount = max
 		let daily = `${numeral(graph.amount * graph.exchange).format('0,0.00')} THB`
 		let monthly = `${numeral((graph.amount * 30) * graph.exchange).format('0,0.00')} THB`
 		term.green.bold.moveTo((term.width / 2) + 9, 4, daily)
