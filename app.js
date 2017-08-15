@@ -31,6 +31,73 @@ let graph = {
 	gpu: []
 }
 
+const ALGO = [
+	'Scrypt',
+	'SHA256',
+	'ScryptNf',
+	'X11',
+	'X13',
+	'Keccak',
+	'X15',
+	'Nist5',
+	'NeoScrypt',
+	'Lyra2RE',
+	'WhirlpoolX',
+	'Qubit',
+	'Quark',
+	'Axiom',
+	'Lyra2REv2',
+	'ScryptJaneNf16',
+	'Blake256r8',
+	'Blake256r14',
+	'Blake256r8vnl',
+	'Hodl',
+	'DaggerHashimoto',
+	'Decred',
+	'CryptoNight',
+	'Lbry',
+	'Equihash',
+	'Pascal',
+	'X11Gost',
+	'Sia',
+	'Blake2s',
+	'Skunk'
+]
+
+
+let provider = () => request({
+	url: `https://api.nicehash.com/api?method=stats.provider.ex&addr=${wallet}`,
+	json: true
+}).then(res => {
+	if (!res.result.error) {
+		let mine = res.result.past
+		let second = 0
+		let unpaid = 0
+		for (let i = 0; i < mine.length; i++) {
+			for (let l = 0; l < mine[i].data.length - 1; l++) {
+				let miner = parseFloat(mine[i].data[l+1][2]) - parseFloat(mine[i].data[l][2])
+				if (miner > 0) {
+					second += (mine[i].data[l+1][0] * 300) - (mine[i].data[l][0] * 300)
+					unpaid += miner
+				}
+			}
+		}
+		// console.log(`algo '${ALGO[mine[i].algo]}' Profit: ${numeral((unpaid / hour) * 24).format('0.00000000')} BTC/Day`)
+		graph.amount = (unpaid / Math.floor(second / 3600)) * 24
+		let daily = `${numeral(graph.amount * graph.exchange).format('0,0.00')} THB`
+		let monthly = `${numeral((graph.amount * 30) * graph.exchange).format('0,0.00')} THB`
+		term.green.bold.moveTo((term.width / 2) + 9, 4, daily)
+		term.green.bold.moveTo((term.width / 2) + 9, 5, monthly)
+		term.moveTo((term.width / 2) + 10 + daily.length, 4, `(${numeral(graph.amount).format('0.00000000')} BTC)`)
+		term.moveTo((term.width / 2) + 10 + monthly.length, 5, `(${numeral(graph.amount * 30).format('0.00000000')} BTC)`)
+	} else {
+		throw res.result.error
+	}
+}).catch(err => {
+	// console.log('stats.provider.ex ::', err.message || err)
+  graph.error += 1
+});
+
 let exchange = () => request({
 	url: `https://blockchain.info/th/ticker`,
 	json: true
@@ -52,31 +119,26 @@ let unpaid = () => request({
 	res.result.stats.forEach(item => {
 		graph.unpaid += parseFloat(item.balance)
 	})
-	graph.amount = 0.0 
-	let last = null
+	// graph.amount = 0.0 
+	// let last = null
 
-	graph.days = 0
-	res.result.payments.forEach(item => {
-		graph.amount += parseFloat(item.amount)
-		if (last) graph.days += (last.diff(moment(item.time).hour(0).minutes(0).seconds(0)) / 86400000)
-		last = moment(item.time).hour(0).minutes(0).seconds(0)
-	})
-	graph.amount = graph.amount / graph.days
+	// graph.days = 0
+	// res.result.payments.forEach(item => {
+	// 	graph.amount += parseFloat(item.amount)
+	// 	if (last) graph.days += (last.diff(moment(item.time).hour(0).minutes(0).seconds(0)) / 86400000)
+	// 	last = moment(item.time).hour(0).minutes(0).seconds(0)
+	// })
+	// graph.amount = graph.amount / graph.days
 
 	if (res.result.payments.length > 0 && graph.payment != res.result.payments[0].time) {
 		graph.payment = res.result.payments[0].time
 		balance()
 	}
-	let daily = `${numeral(graph.amount * graph.exchange).format('0,0.00')} THB`
-	let monthly = `${numeral((graph.amount * 30) * graph.exchange).format('0,0.00')} THB`
-	term.green.bold.moveTo((term.width / 2) + 9, 4, daily)
-	term.green.bold.moveTo((term.width / 2) + 9, 5, monthly)
-	term.moveTo((term.width / 2) + 10 + daily.length, 4, `(${numeral(graph.amount).format('0.00000000')} BTC)`)
-	term.moveTo((term.width / 2) + 10 + monthly.length, 5, `(${numeral(graph.amount * 30).format('0.00000000')} BTC)`)
 
 	let unpaid = `${numeral(graph.unpaid * graph.exchange).format('0,0.00')} THB `
 	term.green.bold.moveTo(57,7, unpaid)
 	term.moveTo(57 + unpaid.length, 7, `(${numeral(graph.unpaid).format('0.00000000')} BTC)`)
+	return provider()
 }).catch((err) => {
   graph.error += 1
 });
@@ -256,7 +318,7 @@ if (process.argv[2]) {
 
 	// Get Unpaid balance
 	new cron.CronJob({
-	  cronTime: '10 17 * * *',
+	  cronTime: '00 19 * * *',
 	  onTick: balance,
 	  start: true,
 	  timeZone: 'Asia/Bangkok'
