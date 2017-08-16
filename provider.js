@@ -48,6 +48,7 @@ let provider = () => request({
 	if (!res.result.error) {
 		let mine = res.result.past
 		let max = 0
+		let algo = -1
 		for (let i = 0; i < mine.length; i++) {
 			let second = 0
 			let unpaid = 0
@@ -59,9 +60,17 @@ let provider = () => request({
 				}
 			}
 			let hour = Math.floor(second / 3600)
-			if ((unpaid / hour) * 24 > max) max = (unpaid / hour) * 24
-			console.log(`algo '${ALGO[mine[i].algo]}' Profit: ${numeral().format('0.00000000')} BTC/Day`)
+			if (hour) {
+				let day = (unpaid / hour) * 24
+				console.log(`algo '${ALGO[mine[i].algo]}' unpaid: ${day}`)
+				if (day > max) {
+					max = day
+					algo = i
+				}
+			}
 		}
+		console.log('-----------------------------------------------------')
+		console.log(`algo '${ALGO[mine[algo].algo]}' Profit: ${max} BTC/Day`)
 	} else {
 		throw res.result.error
 	}

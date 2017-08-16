@@ -82,8 +82,11 @@ let provider = () => request({
 					unpaid += miner
 				}
 			}
-			let day = (unpaid / Math.floor(second / 3600)) * 24
-			if (day > max) max = day
+			let hour = Math.floor(second / 3600)
+			if (hour) {
+				let day = (unpaid / hour) * 24
+				if (day > max) max = day
+			}
 		}
 		// console.log(`algo '${ALGO[mine[i].algo]}' Profit: ${numeral((unpaid / hour) * 24).format('0.00000000')} BTC/Day`)
 		graph.amount = max
@@ -97,7 +100,7 @@ let provider = () => request({
 		throw res.result.error
 	}
 }).catch(err => {
-	// console.log('stats.provider.ex ::', err.message || err)
+	term.red.bold.moveTo(2, 12, err.message || err)
   graph.error += 1
 });
 
@@ -141,7 +144,7 @@ let unpaid = () => request({
 	let unpaid = `${numeral(graph.unpaid * graph.exchange).format('0,0.00')} THB `
 	term.green.bold.moveTo(57,7, unpaid)
 	term.moveTo(57 + unpaid.length, 7, `(${numeral(graph.unpaid).format('0.00000000')} BTC)`)
-	return provider()
+
 }).catch((err) => {
   graph.error += 1
 });
@@ -299,14 +302,17 @@ if (process.argv[2]) {
 	exchange().then(() => {
 		return unpaid()
 	}).then(() => {
-		return getMessage()
+		return provider()
 	})
 	
 
 	// Get Unpaid balance
 	new cron.CronJob({
 	  cronTime: '* * * * *',
-	  onTick: unpaid,
+	  onTick: () => {
+	  	unpaid()
+	  	provider()
+	  },
 	  start: true,
 	  timeZone: 'Asia/Bangkok'
 	});
