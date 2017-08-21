@@ -28,7 +28,8 @@ let graph = {
 	balance: 0.0,
 	unpaid: 0,
 	amount: 0,
-	gpu: []
+	gpu: [],
+	algo: []
 }
 
 const ALGO = [
@@ -88,6 +89,7 @@ let provider = () => request({
 				if (day > max) max = day
 			}
 		}
+
 		// console.log(`algo '${ALGO[mine[i].algo]}' Profit: ${numeral((unpaid / hour) * 24).format('0.00000000')} BTC/Day`)
 		graph.amount = max
 		let daily = `${numeral(graph.amount * graph.exchange).format('0,0.00')} THB`
@@ -100,7 +102,7 @@ let provider = () => request({
 		throw res.result.error
 	}
 }).catch(err => {
-	term.red.bold.moveTo(2, 12, err.message || err)
+	// term.red.bold.moveTo(2, 18, err.message || err)
   graph.error += 1
 });
 
@@ -122,14 +124,24 @@ let unpaid = () => request({
 	json: true
 }).then(res => {
 	graph.unpaid = 0.0 
+	graph.algo = []
 	res.result.stats.forEach(item => {
 		graph.unpaid += parseFloat(item.balance)
+		if (parseFloat(item.accepted_speed) > 0.0) {
+			graph.algo.push({
+				algo: ALGO[item.algo],
+				unpaid: numeral(item.balance).format('0.00000000')
+			})
+		}
+
+
 	})
 
 	if (res.result.payments.length > 0 && graph.payment != res.result.payments[0].time) {
 		graph.payment = res.result.payments[0].time
 		balance(true)
 	}
+
 
 	let unpaid = `${numeral(graph.unpaid * graph.exchange).format('0,0.00')} THB `
 	term.green.bold.moveTo(57,7, unpaid)
@@ -311,17 +323,22 @@ if (process.argv[2]) {
 	term.moveTo(47,7, `| unpaid:`)
 	term.green.bold.moveTo(57,7, `0.00 THB`)
 
+	term.moveTo(2,16, `List Algorithm updated.`)
 	setInterval(() => {
 		term.yellow.bold.moveTo(21,7, graph.update.format('DD MMMM YYYY HH:mm:ss.SSS'))
-		term.moveTo(5,6, `ERROR:`)
-		term.red.bold.moveTo(12,6, graph.error)
+		term.red.bold.moveTo(5,6, `ERROR:`)
+		term.red.bold.moveTo(12,6, graph.error ? graph.error : 'N/A')
 
 		graph.gpu.forEach((item, i) => {
 			normalization(item, i)
 		})
+		graph.algo.forEach((item, i) => {
+			term.blue.bold.moveTo(2, 17+i, `- algo '${item.algo}' unpaid: ${item.unpaid} BTC`)
+		})
 		term.white('\n')
 	}, 1000)
 	term.white('')
+	term.hideCursor()
 	exchange().then(() => {
 		return unpaid()
 	}).then(() => {
