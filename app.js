@@ -125,20 +125,10 @@ let unpaid = () => request({
 	res.result.stats.forEach(item => {
 		graph.unpaid += parseFloat(item.balance)
 	})
-	// graph.amount = 0.0 
-	// let last = null
-
-	// graph.days = 0
-	// res.result.payments.forEach(item => {
-	// 	graph.amount += parseFloat(item.amount)
-	// 	if (last) graph.days += (last.diff(moment(item.time).hour(0).minutes(0).seconds(0)) / 86400000)
-	// 	last = moment(item.time).hour(0).minutes(0).seconds(0)
-	// })
-	// graph.amount = graph.amount / graph.days
 
 	if (res.result.payments.length > 0 && graph.payment != res.result.payments[0].time) {
 		graph.payment = res.result.payments[0].time
-		balance()
+		balance(true)
 	}
 
 	let unpaid = `${numeral(graph.unpaid * graph.exchange).format('0,0.00')} THB `
@@ -149,17 +139,20 @@ let unpaid = () => request({
   graph.error += 1
 });
 
-let balance = () => request({
+let balance = (check) => request({
 	url: `https://api.nicehash.com/api?method=balance&id=${apiId}&key=${apiKey}`,
 	json: true
 }).then(res => {
-	const client = new line.Client({ channelAccessToken: access_token });
 
 	graph.balance = res.result.balance_confirmed
-	let msg = `Balance ${numeral(graph.balance * graph.exchange).format('0,0.00')} THB (${graph.balance} BTC)`
-	client.pushMessage(msgID, { type: 'text', text: msg }).catch((err) => {
-	  graph.error += 1
-	})
+
+	if (!check) {
+		const client = new line.Client({ channelAccessToken: access_token });
+		let msg = `Balance ${numeral(graph.balance * graph.exchange).format('0,0.00')} THB (${graph.balance} BTC)`
+		client.pushMessage(msgID, { type: 'text', text: msg }).catch((err) => {
+		  graph.error += 1
+		})
+	}
 	
 	let balance = `${numeral(graph.balance * graph.exchange).format('0,0.00')} THB `
 	term.green.bold.moveTo(12,5, balance)
@@ -169,22 +162,52 @@ let balance = () => request({
   graph.error += 1
 });
 
-let getMessage = () => {
+
+let getMessageDaily = () => {
 	try {
 		const client = new line.Client({ channelAccessToken: access_token })
-		let unpaid = `You will be paid about ${numeral(graph.unpaid * graph.exchange).format('0,0.00')} THB`
-		let daily = `Daily income ${numeral(graph.amount * graph.exchange).format('0,0.00')} THB`
-		let monthly = `Monthly income ${numeral((graph.amount * 30) * graph.exchange).format('0,0.00')} THB`
-		let exchange = `Exchange rate BTC is ${numeral(graph.exchange).format('0,0.00')} THB`
 
-		let msg = `${daily}
-${monthly}
-${exchange}`
-		client.pushMessage(msgID, { type: 'text', text: unpaid }).then(() => {
-		  return client.pushMessage(msgID, { type: 'text', text: msg })
+		let sender = {
+			type: 'template',
+			altText: `Geforce GTX1080 TI Rig stats`,
+			template: {
+				type: 'buttons',
+				title: `GTX1080 TI x${graph.gpu.length} Rig`,
+				text: `Daily income ${numeral(graph.amount * graph.exchange).format('0,0.00')} Baht
+Monthly income ${numeral((graph.amount * 30) * graph.exchange).format('0,0.00')} Baht`,
+				thumbnailImageUrl: 'https://image.ibb.co/i4dHRk/1080ti_2b_1.jpg',
+				actions: [
+					{ type: 'message', label: `UNPAID ${numeral(graph.unpaid * graph.exchange).format('0,0.00')} Baht`, text: numeral(graph.unpaid * graph.exchange).format('0,0.00') },
+					{ type: 'message', label: `Exchange rate`, text: numeral(graph.exchange).format('0,0.00') }
+				]
+			}
+		}
+
+		// let unpaid = `You will be paid about ${numeral(graph.unpaid * graph.exchange).format('0,0.00')} THB`
+		// client.pushMessage(msgID, { type: 'text', text: unpaid })
+		client.pushMessage(msgID, sender).then(() => {
+
 		}).catch((err) => {
 		  graph.error += 1
 		})
+	} catch (ex) {
+	  graph.error += 1
+	}
+}
+let last_unpaid = 0.0
+let getMessagePaid = () => {
+	try {
+		const client = new line.Client({ channelAccessToken: access_token })
+		let money = (graph.unpaid - last_unpaid) * graph.exchange
+		if (last_unpaid > graph.unpaid) money = graph.unpaid * graph.exchange
+		if (money > 0.0) {
+			let unpaid = `You get paid +${numeral(money).format('0,0.00')} Baht.`
+			last_unpaid = graph.unpaid
+			client.pushMessage(msgID, { type: 'text', text: unpaid }).catch((err) => {
+			  graph.error += 1
+			})
+		}
+
 	} catch (ex) {
 	  graph.error += 1
 	}
@@ -308,10 +331,9 @@ if (process.argv[2]) {
 
 	// Get Unpaid balance
 	new cron.CronJob({
-	  cronTime: '* * * * *',
+	  cronTime: '00 * * * *',
 	  onTick: () => {
-	  	unpaid()
-	  	provider()
+	  	unpaid().then(() => provider()).then(() => getMessagePaid())
 	  },
 	  start: true,
 	  timeZone: 'Asia/Bangkok'
@@ -320,7 +342,7 @@ if (process.argv[2]) {
 	// Get Unpaid balance
 	new cron.CronJob({
 	  cronTime: '45 16 * * *',
-	  onTick: getMessage,
+	  onTick: getMessageDaily,
 	  start: true,
 	  timeZone: 'Asia/Bangkok'
 	});
