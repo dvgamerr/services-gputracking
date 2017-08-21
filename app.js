@@ -333,7 +333,11 @@ if (process.argv[2]) {
 			normalization(item, i)
 		})
 		graph.algo.forEach((item, i) => {
-			term.blue.bold.moveTo(2, 17+i, `- algo '${item.algo}' unpaid: ${item.unpaid} BTC`)
+			term.moveTo(2, 17+i, `- algo`)
+			term.yellow.bold.moveTo(9, 17+i, `'${item.algo}'`)
+			term.moveTo(26, 17+i, `unpaid:`)
+			term.green.bold.moveTo(34, 17+i, item.unpaid)
+			term.moveTo(45, 17+i, `BTC`)
 		})
 		term.white('\n')
 	}, 1000)
