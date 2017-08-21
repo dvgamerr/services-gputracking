@@ -65,6 +65,12 @@ const ALGO = [
 	'Skunk'
 ]
 
+let msgError = (title, err) => `\`${title}\`
+
+\`\`\`
+${err}
+\`\`\`
+`
 
 let provider = () => request({
 	url: `https://api.nicehash.com/api?method=stats.provider.ex&addr=${wallet}`,
@@ -103,6 +109,7 @@ let provider = () => request({
 	}
 }).catch(err => {
 	// term.red.bold.moveTo(2, 18, err.message || err)
+	slack.hook(`${process.argv[2]} -- logs`, msgError('stats.provider.ex', err.message || err))
   graph.error += 1
 });
 
@@ -112,10 +119,11 @@ let exchange = () => request({
 }).then(res => {
 	graph.exchange = res['THB'].sell
 	let exchange = `${numeral(graph.exchange).format('0,0.00')} THB`
-	term.blue.bold.moveTo(12,4, exchange)
+	term.green.bold.moveTo(12,4, exchange)
 	term.moveTo(26,4, `(1 BTC)`)
 	// console.log(`${res['THB'].sell} ${res['THB'].symbol}`)
 }).catch((err) => {
+	slack.hook(`${process.argv[2]} -- logs`, msgError('exchange.blockchain.info', err.message || err))
   graph.error += 1
 });
 
@@ -148,6 +156,7 @@ let unpaid = () => request({
 	term.moveTo(57 + unpaid.length, 7, `(${numeral(graph.unpaid).format('0.00000000')} BTC)`)
 
 }).catch((err) => {
+	slack.hook(`${process.argv[2]} -- logs`, msgError('stats.provider', err.message || err))
   graph.error += 1
 });
 
@@ -160,8 +169,9 @@ let balance = (check) => request({
 
 	if (!check) {
 		const client = new line.Client({ channelAccessToken: access_token });
-		let msg = `Balance ${numeral(graph.balance * graph.exchange).format('0,0.00')} THB (${graph.balance} BTC)`
+		let msg = `Balance ${numeral(graph.balance * graph.exchange).format('0,0.00')} Baht (${graph.balance} BTC)`
 		client.pushMessage(msgID, { type: 'text', text: msg }).catch((err) => {
+			slack.hook(`${process.argv[2]} -- logs`, msgError('line.push.balance', err.message || err))
 		  graph.error += 1
 		})
 	}
@@ -171,6 +181,7 @@ let balance = (check) => request({
 	term.moveTo(12 + balance.length, 5, `(${numeral(graph.balance).format('0.00000000')} BTC)`)
 
 }).catch((err) => {
+	slack.hook(`${process.argv[2]} -- logs`, msgError('balance', err.message || err))
   graph.error += 1
 });
 
@@ -200,9 +211,11 @@ Monthly income ${numeral((graph.amount * 30) * graph.exchange).format('0,0.00')}
 		client.pushMessage(msgID, sender).then(() => {
 
 		}).catch((err) => {
+			slack.hook(`${process.argv[2]} -- logs`, msgError('line.push.template', err.message || err))
 		  graph.error += 1
 		})
 	} catch (ex) {
+		slack.hook(`${process.argv[2]} -- logs`, msgError('getMessageDaily', ex))
 	  graph.error += 1
 	}
 }
@@ -216,11 +229,13 @@ let getMessagePaid = () => {
 			let unpaid = `You get paid +${numeral(money).format('0,0.00')} Baht.`
 			last_unpaid = graph.unpaid
 			client.pushMessage(msgID, { type: 'text', text: unpaid }).catch((err) => {
+				slack.hook(`${process.argv[2]} -- logs`, msgError('line.push.paid', err.message || err))
 			  graph.error += 1
 			})
 		}
 
 	} catch (ex) {
+		slack.hook(`${process.argv[2]} -- logs`, msgError('getMessagePaid', ex))
 	  graph.error += 1
 	}
 }
@@ -262,17 +277,18 @@ let normalization = (gpu, i) => {
 		term.bold.cyan.moveTo(p_x, 8+i, gpu.power)
 	}
 
-  if ((gpu.temp >= 85 || gpu.temp < 60) && !isOverheat) {
-  	let slack_text = `[${moment().format('HH:MM:ss')}] *GPU#${gpu.index}:* \`${gpu.ugpu}\` TEMP: \`${gpu.temp}°C\` POWER: \`${!gpu.power ? 'N\\A' : `${numeral(gpu.power).format(0)} W`}\``
+  if ((gpu.temp >= 85 || gpu.temp < 20) && !isOverheat) {
+  	let slack_text = `\`[${moment().format('HH:MM')}]\` GPU:*${gpu.ugpu}* TEMP:*${gpu.temp}°C* POWER:*${!gpu.power ? 'N\\A' : `${numeral(gpu.power).format(0)}W`}*`
   	let line_text = `${gpu.index}#${gpu.name}
 GPU: ${gpu.ugpu} Temperature: ${gpu.temp}°C P: ${!gpu.power ? 'N\\A' : `${numeral(gpu.power).format(0)} W`}`
-		slack.hook(`${(process.argv[2] ? `[${process.argv[2]}]` : '')}`, slack_text)
+		slack.hook(`${(process.argv[2] ? `${process.argv[2]} GPU#${gpu.index}` : '')}`, slack_text)
 
   	isOverheat = true
   	atOverheat = new Date()
   } else if (isOverheat) {
   	if (new Date() - atOverheat > 90000) isOverheat = false
   }
+
 }
 
 if (process.argv[2]) {
@@ -307,7 +323,7 @@ if (process.argv[2]) {
 	term.bold.white.bgGreen.moveTo((term.width / 2) - (header.length / 2),2, header)
 
 	term.moveTo(2,4, `Exchange:`)
-	term.blue.bold.moveTo(12,4, `0.00 THB`)
+	term.green.bold.moveTo(12,4, `0.00 THB`)
 
 	term.moveTo((term.width / 2) + 2,4, `Daily:`)
 	term.green.bold.moveTo((term.width / 2) + 9,4, `0.00 THB`)
