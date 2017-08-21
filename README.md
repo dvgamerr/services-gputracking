@@ -1,4 +1,14 @@
-# gpuminer-line api notification
-gpuminer-line (Nvidia GTX1080 ti version)
+## gpuminer-line api notification
+gpuminer-line support Nvidia GTX1080 TI and `nicehash.com` only
 
-![gpuminer-line](https://raw.githubusercontent.com/dvgamer/gpu-watcher/master/images/sample.gif)
+### Environment
+- `NICEHASH_ID` 
+- `NICEHASH_KEY`
+- `NICEHASH_WALLET`
+
+```bash
+npm i
+npm run miner1
+```
+
+![gpuminer-line](https://raw.githubusercontent.com/dvgamer/gpu-watcher/master/images/sample-v2.png)
