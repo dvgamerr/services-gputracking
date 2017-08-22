@@ -1,4 +1,3 @@
-// C:\Program Files\NVIDIA Corporation\NVSMI\nvidia-smi.exe
 const term 		= require( 'terminal-kit' ).terminal
 const os 			= require('os')
 const request = require('request-promise')
