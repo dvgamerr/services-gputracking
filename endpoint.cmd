@@ -1,3 +1,4 @@
+@echo off
 :LOOP
 cls
 TITLE GPUMinerA
