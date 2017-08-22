@@ -108,7 +108,7 @@ let provider = () => request({
 	}
 }).catch(err => {
 	// term.red.bold.moveTo(2, 18, err.message || err)
-	slack.hook(`${process.argv[2]} -- logs`, msgError('stats.provider.ex', err.message || err))
+	slack.hook(`${process.argv[2]} -- Logs`, msgError('stats.provider.ex', err.message || err))
   graph.error += 1
 });
 
@@ -122,7 +122,7 @@ let exchange = () => request({
 	term.moveTo(26,4, `(1 BTC)`)
 	// console.log(`${res['THB'].sell} ${res['THB'].symbol}`)
 }).catch((err) => {
-	slack.hook(`${process.argv[2]} -- logs`, msgError('exchange.blockchain.info', err.message || err))
+	slack.hook(`${process.argv[2]} -- Logs`, msgError('exchange.blockchain.info', err.message || err))
   graph.error += 1
 });
 
@@ -155,7 +155,7 @@ let unpaid = () => request({
 	term.moveTo(57 + unpaid.length, 7, `(${numeral(graph.unpaid).format('0.00000000')} BTC)`)
 
 }).catch((err) => {
-	slack.hook(`${process.argv[2]} -- logs`, msgError('stats.provider', err.message || err))
+	slack.hook(`${process.argv[2]} -- Logs`, msgError('stats.provider', err.message || err))
   graph.error += 1
 });
 
@@ -170,7 +170,7 @@ let balance = (check) => request({
 		const client = new line.Client({ channelAccessToken: access_token });
 		let msg = `Balance ${numeral(graph.balance * graph.exchange).format('0,0.00')} Baht (${graph.balance} BTC)`
 		client.pushMessage(msgID, { type: 'text', text: msg }).catch((err) => {
-			slack.hook(`${process.argv[2]} -- logs`, msgError('line.push.balance', err.message || err))
+			slack.hook(`${process.argv[2]} -- Logs`, msgError('line.push.balance', err.message || err))
 		  graph.error += 1
 		})
 	}
@@ -180,7 +180,7 @@ let balance = (check) => request({
 	term.moveTo(12 + balance.length, 5, `(${numeral(graph.balance).format('0.00000000')} BTC)`)
 
 }).catch((err) => {
-	slack.hook(`${process.argv[2]} -- logs`, msgError('balance', err.message || err))
+	slack.hook(`${process.argv[2]} -- Logs`, msgError('balance', err.message || err))
   graph.error += 1
 });
 
@@ -210,11 +210,11 @@ Monthly income ${numeral((graph.amount * 30) * graph.exchange).format('0,0.00')}
 		client.pushMessage(msgID, sender).then(() => {
 
 		}).catch((err) => {
-			slack.hook(`${process.argv[2]} -- logs`, msgError('line.push.template', err.message || err))
+			slack.hook(`${process.argv[2]} -- Logs`, msgError('line.push.template', err.message || err))
 		  graph.error += 1
 		})
 	} catch (ex) {
-		slack.hook(`${process.argv[2]} -- logs`, msgError('getMessageDaily', ex))
+		slack.hook(`${process.argv[2]} -- Logs`, msgError('getMessageDaily', ex))
 	  graph.error += 1
 	}
 }
@@ -228,14 +228,14 @@ let getMessagePaid = () => {
 			let msgPaid = last_unpaid > graph.unpaid || last_unpaid == 0.0
 			let unpaid = `You ${msgPaid ? `will be paid about ` : `get paid +`}${numeral(money).format('0,0.00')} Baht.`
 			client.pushMessage(msgID, { type: 'text', text: unpaid }).catch((err) => {
-				slack.hook(`${process.argv[2]} -- logs`, msgError('line.push.paid', err.message || err))
+				slack.hook(`${process.argv[2]} -- Logs`, msgError('line.push.paid', err.message || err))
 			  graph.error += 1
 			})
 			last_unpaid = graph.unpaid
 		}
 
 	} catch (ex) {
-		slack.hook(`${process.argv[2]} -- logs`, msgError('getMessagePaid', ex))
+		slack.hook(`${process.argv[2]} -- Logs`, msgError('getMessagePaid', ex))
 	  graph.error += 1
 	}
 }
@@ -278,10 +278,10 @@ let normalization = (gpu, i) => {
 	}
 
   if ((gpu.temp >= 85 || gpu.temp < 20) && !isOverheat) {
-  	let slack_text = `\`[${moment().format('HH:MM')}]\` GPU:*${gpu.ugpu}* TEMP:*${gpu.temp}°C* POWER:*${!gpu.power ? 'N\\A' : `${numeral(gpu.power).format(0)}W`}*`
+  	let slack_text = `\`[${moment().format('HH:mm')}]\` GPU:*${gpu.ugpu}* TEMP:*${gpu.temp}°C* POWER:*${!gpu.power ? 'N\\A' : `${numeral(gpu.power).format(0)}W`}*`
   	let line_text = `${gpu.index}#${gpu.name}
 GPU: ${gpu.ugpu} Temperature: ${gpu.temp}°C P: ${!gpu.power ? 'N\\A' : `${numeral(gpu.power).format(0)} W`}`
-		slack.hook(`${(process.argv[2] ? `${process.argv[2]} GPU#${gpu.index}` : '')}`, slack_text)
+		slack.hook(`${process.argv[2]} -- GPU#${gpu.index}`, slack_text)
 
   	isOverheat = true
   	atOverheat = new Date()
