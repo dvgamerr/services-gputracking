@@ -386,7 +386,7 @@ if (process.argv[2]) {
 
 	// Get Unpaid balance
 	new cron.CronJob({
-	  cronTime: '00 19 * * *',
+	  cronTime: '45 18 * * *',
 	  onTick: balance,
 	  start: true,
 	  timeZone: 'Asia/Bangkok'

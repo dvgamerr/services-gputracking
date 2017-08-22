@@ -2,7 +2,7 @@ const fs 			= require('fs')
 const moment 	= require('moment')
 const events 	= require('events')
 const spawn 	= require('child_process').spawn
-const emiter 	= new events.EventEmitter()
+const slack 	= require('../slack-webhook')
 
 let query = [
 	'index',
@@ -46,6 +46,7 @@ var smi = function(data) {
 	}
 }
 
+let emiter 	= new events.EventEmitter()
 emiter.watch = function(config) {
 	let line = ''
 	let total = -1
@@ -54,23 +55,27 @@ emiter.watch = function(config) {
 		let ls = spawn('cmd.exe', ['/c', NVSMIx64, `--query-gpu=${query.join(',')}`,`--format=csv`,`-l`,`${config.interval || 1}`])
 
 		ls.stdout.on('data', (data) => {
-			line += data
-			if (/\r\n/ig.test(line)) {
-				total++
-				if (total > 0) { 
-					let gpu = new smi(line.replace('\r\n',''))
-					emiter.emit('gpu', gpu);
+			try {
+				line += data
+				if (/\r\n/ig.test(line)) {
+					total++
+					if (total > 0) { 
+						let gpu = new smi(line.replace('\r\n',''))
+						emiter.emit('gpu', gpu);
+					}
+					line = ''
 				}
-				line = ''
+			} catch (ex) {
+				slack.hook(`${process.argv[2]} -- Logs`, `\`nvidia-smi\` ${ex.message || ex}`)
 			}
-		});
+		})
 
 		ls.stderr.on('data', (data) => {
-		  console.log(`stderr: ${data}`);
+			slack.hook(`${process.argv[2]} -- Logs`, `\`nvidia-smi\` ${data.toString()}`)
 		});
 
 		ls.on('close', (code) => {
-		  console.log(`child process exited with code ${code}`);
+			slack.hook(`${process.argv[2]} -- Logs`, `\`nvidia-smi\` child process exited with code ${code}`)
 		});
 
 
