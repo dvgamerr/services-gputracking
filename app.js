@@ -65,7 +65,6 @@ const ALGO = [
 ]
 
 let msgError = (title, err) => `\`${title}\`
-
 \`\`\`
 ${err}
 \`\`\`
@@ -225,12 +224,16 @@ let getMessagePaid = () => {
 		let money = (graph.unpaid - last_unpaid) * graph.exchange
 		if (last_unpaid > graph.unpaid) money = graph.unpaid * graph.exchange
 		if (money > 0.0) {
-			let msgPaid = last_unpaid > graph.unpaid || last_unpaid == 0.0
-			let unpaid = `You ${msgPaid ? `will be paid about ` : `get paid +`}${numeral(money).format('0,0.00')} Baht.`
-			client.pushMessage(msgID, { type: 'text', text: unpaid }).catch((err) => {
-				slack.hook(`${process.argv[2]} -- Logs`, msgError('line.push.paid', err.message || err))
-			  graph.error += 1
-			})
+			if (last_unpaid < graph.unpaid && last_unpaid > 0.0) {
+				balance()
+			} else {
+				let msgPaid = last_unpaid > graph.unpaid || last_unpaid == 0.0
+				let unpaid = `You ${msgPaid ? `will be unpaid about ` : `get paid +`}${numeral(money).format('0,0.00')} Baht.`
+				client.pushMessage(msgID, { type: 'text', text: unpaid }).catch((err) => {
+					slack.hook(`${process.argv[2]} -- Logs`, msgError('line.push.paid', err.message || err))
+				  graph.error += 1
+				})
+			}
 			last_unpaid = graph.unpaid
 		}
 
@@ -277,7 +280,7 @@ let normalization = (gpu, i) => {
 		term.bold.cyan.moveTo(p_x, 8+i, gpu.power)
 	}
 
-  if ((gpu.temp >= 85 || gpu.temp < 20) && !isOverheat) {
+  if ((gpu.temp >= 85 || gpu.temp < 50) && !isOverheat) {
   	let slack_text = `\`[${moment().format('HH:mm')}]\` GPU:*${gpu.ugpu}* TEMP:*${gpu.temp}°C* POWER:*${!gpu.power ? 'N\\A' : `${numeral(gpu.power).format(0)}W`}*`
   	let line_text = `${gpu.index}#${gpu.name}
 GPU: ${gpu.ugpu} Temperature: ${gpu.temp}°C P: ${!gpu.power ? 'N\\A' : `${numeral(gpu.power).format(0)} W`}`
