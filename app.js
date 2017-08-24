@@ -224,16 +224,16 @@ let getMessagePaid = () => {
 		let money = (graph.unpaid - last_unpaid) * graph.exchange
 		if (last_unpaid > graph.unpaid) money = graph.unpaid * graph.exchange
 		if (money > 0.0) {
-			if (last_unpaid < graph.unpaid && last_unpaid > 0.0) {
-				balance()
-			} else {
+			// if (last_unpaid > graph.unpaid && last_unpaid > 0.0) {
+			// 	balance()
+			// } else {
 				let msgPaid = last_unpaid > graph.unpaid || last_unpaid == 0.0
 				let unpaid = `You ${msgPaid ? `will be unpaid about ` : `get paid +`}${numeral(money).format('0,0.00')} Baht.`
 				client.pushMessage(msgID, { type: 'text', text: unpaid }).catch((err) => {
 					slack.hook(`${process.argv[2]} -- Logs`, msgError('line.push.paid', err.message || err))
 				  graph.error += 1
 				})
-			}
+			// }
 			last_unpaid = graph.unpaid
 		}
 
