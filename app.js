@@ -372,6 +372,9 @@ if (process.argv[2]) {
 	}, 1000)
 	term.white('')
 	term.hideCursor()
+
+	slack.hook(`${process.argv[2]} -- Logs`, `\`GPU-Watcher\` Starting...`)
+
 	exchange().then(() => {
 		return unpaid()
 	}).then(() => {
