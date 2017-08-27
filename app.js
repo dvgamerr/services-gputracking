@@ -186,28 +186,38 @@ let balance = (check) => request({
 
 let getMessageDaily = () => {
 	try {
-		const client = new line.Client({ channelAccessToken: access_token })
-
-		let sender = {
-			type: 'template',
-			altText: `Geforce GTX1080 TI Rig stats`,
-			template: {
-				type: 'buttons',
-				title: `GTX1080 TI x${graph.gpu.length} Rig`,
-				text: `Daily income ${numeral(graph.amount * graph.exchange).format('0,0.00')} Baht
-Monthly income ${numeral((graph.amount * 30) * graph.exchange).format('0,0.00')} Baht`,
-				thumbnailImageUrl: 'https://image.ibb.co/i4dHRk/1080ti_2b_1.jpg',
-				actions: [
-					{ type: 'message', label: `UNPAID ${numeral(graph.unpaid * graph.exchange).format('0,0.00')} Baht`, text: numeral(graph.unpaid * graph.exchange).format('0,0.00') },
-					{ type: 'message', label: `Exchange rate`, text: numeral(graph.exchange).format('0,0.00') }
-				]
-			}
-		}
 
 		// let unpaid = `You will be paid about ${numeral(graph.unpaid * graph.exchange).format('0,0.00')} THB`
 		// client.pushMessage(msgID, { type: 'text', text: unpaid })
-		client.pushMessage(msgID, sender).then(() => {
+		balance(true).then(() => {
 
+
+			const client = new line.Client({ channelAccessToken: access_token })
+
+			let sender = {
+				type: 'template',
+				altText: `Geforce GTX1080 TI Rig stats`,
+				template: {
+					type: 'buttons',
+					title: `GTX1080 TI x${graph.gpu.length} Rig`,
+					text: `Daily income ${numeral(graph.amount * graph.exchange).format('0,0.00')} Baht
+Monthly income ${numeral((graph.amount * 30) * graph.exchange).format('0,0.00')} Baht`,
+					thumbnailImageUrl: 'https://image.ibb.co/i4dHRk/1080ti_2b_1.jpg',
+					actions: [
+						{ 
+							type: 'message',
+							label: `UNPAID ${numeral(graph.unpaid * graph.exchange).format('0,0.00')} Baht`, 
+							text: `unpaid: ${numeral(graph.unpaid).format('0.00000000')} BTC` 
+						},
+						{ 
+							type: 'message', 
+							label: `BALANCE ${numeral(graph.balance * graph.exchange).format('0,0.00')} Baht`, 
+							text: numeral(graph.balance).format('0.00000000')
+						}
+					]
+				}
+			}
+			return client.pushMessage(msgID, sender)
 		}).catch((err) => {
 			slack.hook(`${process.argv[2]} -- Logs`, msgError('line.push.template', err.message || err))
 		  graph.error += 1
