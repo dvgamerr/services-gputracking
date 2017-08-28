@@ -305,32 +305,32 @@ GPU: ${gpu.ugpu} Temperature: ${gpu.temp}°C P: ${!gpu.power ? 'N\\A' : `${numer
 }
 
 if (process.argv[2]) {
-	r.connect({ host: 'aws.touno.co', port: 6511 }, function(err, conn) {
+	// r.connect({ host: 'aws.touno.co', port: 6511 }, function(err, conn) {
 	// r.connect({ host: 'localhost', port: 28015 }, function(err, conn) {
-		conn.use('miner')
+		// conn.use('miner')
 		nvidia.watch({ interval: 1 })
 		nvidia.on('gpu', gpu => {
-	    r.table('gpu_stats').insert({ 
-	    	miner: process.argv[2], gpu: {
-		     index: gpu.index,
-		     date: gpu.date.toDate(),
-		     name: gpu.name,
-		     device: gpu.device,
-		     bus: gpu.bus,
-		     domain: gpu.domain,
-		     temp: gpu.temp,
-		     ugpu: gpu.ugpu,
-		     umemory: gpu.umemory,
-		     power: gpu.power,
-		     clocks: gpu.clocks,
-		     fan: gpu.fan,
-		     memory: gpu.memory
-	    	} 
-	  	}).run(conn)
+	   //  r.table('gpu_stats').insert({ 
+	   //  	miner: process.argv[2], gpu: {
+		  //    index: gpu.index,
+		  //    date: gpu.date.toDate(),
+		  //    name: gpu.name,
+		  //    device: gpu.device,
+		  //    bus: gpu.bus,
+		  //    domain: gpu.domain,
+		  //    temp: gpu.temp,
+		  //    ugpu: gpu.ugpu,
+		  //    umemory: gpu.umemory,
+		  //    power: gpu.power,
+		  //    clocks: gpu.clocks,
+		  //    fan: gpu.fan,
+		  //    memory: gpu.memory
+	   //  	} 
+	  	// }).run(conn)
 			graph.update = gpu.date
 			graph.gpu[gpu.index] = gpu
 		});
-  })
+  // })
 
 	let header = `  Computer Name: ${os.hostname()} [${process.argv[2]}]  `
 	term.bold.white.bgGreen.moveTo((term.width / 2) - (header.length / 2),2, header)
