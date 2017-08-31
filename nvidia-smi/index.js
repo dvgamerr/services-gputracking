@@ -66,16 +66,16 @@ emiter.watch = function(config) {
 					line = ''
 				}
 			} catch (ex) {
-				slack.hook(`${process.argv[2]} -- Logs`, `\`nvidia-smi\` ${ex.message || ex}`)
+				slack.logs(`${process.argv[2]}`, `\`nvidia-smi\` ${ex.message || ex}`)
 			}
 		})
 
 		ls.stderr.on('data', (data) => {
-			slack.hook(`${process.argv[2]} -- Logs`, `\`nvidia-smi\` ${data.toString()}`)
+			slack.logs(`${process.argv[2]}`, `\`nvidia-smi\` ${data.toString()}`)
 		});
 
 		ls.on('close', (code) => {
-			slack.hook(`${process.argv[2]} -- Logs`, `\`nvidia-smi\` child process exited with code ${code}`)
+			slack.logs(`${process.argv[2]}`, `\`nvidia-smi\` child process exited with code ${code}`)
 		});
 
 

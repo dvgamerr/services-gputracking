@@ -107,7 +107,7 @@ let provider = () => request({
 	}
 }).catch(err => {
 	// term.red.bold.moveTo(2, 18, err.message || err)
-	slack.hook(`${process.argv[2]} -- Logs`, msgError('stats.provider.ex', err.message || err))
+	slack.logs(`${process.argv[2]}`, msgError('stats.provider.ex', err.message || err))
   graph.error += 1
 });
 
@@ -121,7 +121,7 @@ let exchange = () => request({
 	term.moveTo(26,4, `(1 BTC)`)
 	// console.log(`${res['THB'].sell} ${res['THB'].symbol}`)
 }).catch((err) => {
-	slack.hook(`${process.argv[2]} -- Logs`, msgError('exchange.blockchain.info', err.message || err))
+	slack.logs(`${process.argv[2]}`, msgError('exchange.blockchain.info', err.message || err))
   graph.error += 1
 });
 
@@ -154,7 +154,7 @@ let unpaid = () => request({
 	term.moveTo(57 + unpaid.length, 7, `(${numeral(graph.unpaid).format('0.00000000')} BTC)`)
 
 }).catch((err) => {
-	slack.hook(`${process.argv[2]} -- Logs`, msgError('stats.provider', err.message || err))
+	slack.logs(`${process.argv[2]}`, msgError('stats.provider', err.message || err))
   graph.error += 1
 });
 
@@ -169,7 +169,7 @@ let balance = (check) => request({
 		const client = new line.Client({ channelAccessToken: access_token });
 		let msg = `Balance ${numeral(graph.balance * graph.exchange).format('0,0.00')} Baht (${graph.balance} BTC)`
 		client.pushMessage(msgID, { type: 'text', text: msg }).catch((err) => {
-			slack.hook(`${process.argv[2]} -- Logs`, msgError('line.push.balance', err.message || err))
+			slack.logs(`${process.argv[2]}`, msgError('line.push.balance', err.message || err))
 		  graph.error += 1
 		})
 	}
@@ -179,7 +179,7 @@ let balance = (check) => request({
 	term.moveTo(12 + balance.length, 5, `(${numeral(graph.balance).format('0.00000000')} BTC)`)
 
 }).catch((err) => {
-	slack.hook(`${process.argv[2]} -- Logs`, msgError('balance', err.message || err))
+	slack.logs(`${process.argv[2]}`, msgError('balance', err.message || err))
   graph.error += 1
 });
 
@@ -219,11 +219,11 @@ Monthly income ${numeral((graph.amount * 30) * graph.exchange).format('0,0.00')}
 			}
 			return client.pushMessage(msgID, sender)
 		}).catch((err) => {
-			slack.hook(`${process.argv[2]} -- Logs`, msgError('line.push.template', err.message || err))
+			slack.logs(`${process.argv[2]}`, msgError('line.push.template', err.message || err))
 		  graph.error += 1
 		})
 	} catch (ex) {
-		slack.hook(`${process.argv[2]} -- Logs`, msgError('getMessageDaily', ex))
+		slack.logs(`${process.argv[2]}`, msgError('getMessageDaily', ex))
 	  graph.error += 1
 	}
 }
@@ -240,7 +240,7 @@ let getMessagePaid = () => {
 				let msgPaid = last_unpaid > graph.unpaid || last_unpaid == 0.0
 				let unpaid = `You ${msgPaid ? `will be unpaid about ` : `get paid +`}${numeral(money).format('0,0.00')} Baht.`
 				client.pushMessage(msgID, { type: 'text', text: unpaid }).catch((err) => {
-					slack.hook(`${process.argv[2]} -- Logs`, msgError('line.push.paid', err.message || err))
+					slack.logs(`${process.argv[2]}`, msgError('line.push.paid', err.message || err))
 				  graph.error += 1
 				})
 			// }
@@ -248,7 +248,7 @@ let getMessagePaid = () => {
 		}
 
 	} catch (ex) {
-		slack.hook(`${process.argv[2]} -- Logs`, msgError('getMessagePaid', ex))
+		slack.logs(`${process.argv[2]}`, msgError('getMessagePaid', ex))
 	  graph.error += 1
 	}
 }
@@ -373,7 +373,7 @@ if (process.argv[2]) {
 	term.white('')
 	term.hideCursor()
 
-	slack.hook(`${process.argv[2]} -- Logs`, `\`GPU-Watcher\` Starting...`)
+	slack.logs(`${process.argv[2]}`, `\`GPU-Watcher\` Starting...`)
 
 	exchange().then(() => {
 		return unpaid()
