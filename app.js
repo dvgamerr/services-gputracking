@@ -1,4 +1,4 @@
-const term 		= require( 'terminal-kit' ).terminal
+// const term 		= require( 'terminal-kit' ).terminal
 const os 			= require('os')
 const request = require('request-promise')
 const moment 	= require('moment')
@@ -13,7 +13,7 @@ const msgID = 'U99a557887fe970d1e51dcef21f2fc278'
 
 const line = require('@line/bot-sdk');
 const access_token = 'aLWtThxKjje3XZPX9MMczLk/0tHwqCN7OVcfbfLSKFAMb8aLSL7VGW9xX/SeSCCEjE/N8TEiKTMJmOzWPrPvx3Ki03ezUhlS8CE8XkKNOLjlugrrXbD5lrpD4IAsehEleBS+mNcAjfLTtRim7qaeWQdB04t89/1O/w1cDnyilFU='
-const nvidia 	= require('./nvidia-smi')
+// const nvidia 	= require('./nvidia-smi')
 const slack 	= require('./slack-webhook')
 // **GPU#0** GeForce GTX 1080 Ti 11GB - Temperature: `84 °C` Power: `245.54 W`
 let isOverheat = false, atOverheat = null
@@ -66,7 +66,7 @@ const ALGO = [
 
 let msgError = (title, err) => `\`${title}\`
 \`\`\`
-${err}
+${err.toString()}
 \`\`\`
 `
 
@@ -98,10 +98,10 @@ let provider = () => request({
 		graph.amount = max
 		let daily = `${numeral(graph.amount * graph.exchange).format('0,0.00')} THB`
 		let monthly = `${numeral((graph.amount * 30) * graph.exchange).format('0,0.00')} THB`
-		term.green.bold.moveTo((term.width / 2) + 9, 4, daily)
-		term.green.bold.moveTo((term.width / 2) + 9, 5, monthly)
-		term.moveTo((term.width / 2) + 10 + daily.length, 4, `(${numeral(graph.amount).format('0.00000000')} BTC)`)
-		term.moveTo((term.width / 2) + 10 + monthly.length, 5, `(${numeral(graph.amount * 30).format('0.00000000')} BTC)`)
+		// term.green.bold.moveTo((term.width / 2) + 9, 4, daily)
+		// term.green.bold.moveTo((term.width / 2) + 9, 5, monthly)
+		// term.moveTo((term.width / 2) + 10 + daily.length, 4, `(${numeral(graph.amount).format('0.00000000')} BTC)`)
+		// term.moveTo((term.width / 2) + 10 + monthly.length, 5, `(${numeral(graph.amount * 30).format('0.00000000')} BTC)`)
 	} else {
 		throw res.result.error
 	}
@@ -117,8 +117,8 @@ let exchange = () => request({
 }).then(res => {
 	graph.exchange = res['THB'].sell
 	let exchange = `${numeral(graph.exchange).format('0,0.00')} THB`
-	term.green.bold.moveTo(12,4, exchange)
-	term.moveTo(26,4, `(1 BTC)`)
+	// term.green.bold.moveTo(12,4, exchange)
+	// term.moveTo(26,4, `(1 BTC)`)
 	// console.log(`${res['THB'].sell} ${res['THB'].symbol}`)
 }).catch((err) => {
 	slack.logs(`${process.argv[2]}`, msgError('exchange.blockchain.info', err.message || err))
@@ -150,8 +150,8 @@ let unpaid = () => request({
 
 
 	let unpaid = `${numeral(graph.unpaid * graph.exchange).format('0,0.00')} THB `
-	term.green.bold.moveTo(57,7, unpaid)
-	term.moveTo(57 + unpaid.length, 7, `(${numeral(graph.unpaid).format('0.00000000')} BTC)`)
+	// term.green.bold.moveTo(57,7, unpaid)
+	// term.moveTo(57 + unpaid.length, 7, `(${numeral(graph.unpaid).format('0.00000000')} BTC)`)
 
 }).catch((err) => {
 	slack.logs(`${process.argv[2]}`, msgError('stats.provider', err.message || err))
@@ -175,8 +175,8 @@ let balance = (check) => request({
 	}
 	
 	let balance = `${numeral(graph.balance * graph.exchange).format('0,0.00')} THB `
-	term.green.bold.moveTo(12,5, balance)
-	term.moveTo(12 + balance.length, 5, `(${numeral(graph.balance).format('0.00000000')} BTC)`)
+	// term.green.bold.moveTo(12,5, balance)
+	// term.moveTo(12 + balance.length, 5, `(${numeral(graph.balance).format('0.00000000')} BTC)`)
 
 }).catch((err) => {
 	slack.logs(`${process.argv[2]}`, msgError('balance', err.message || err))
@@ -263,31 +263,31 @@ let normalization = (gpu, i) => {
 	let name = `- GPU#${gpu.index} ${gpu.name} ${parseInt(gpu.memory.total / 1024)}GB --- GPU: `
 	let mem = `${(gpu.memory.used * 100 / gpu.memory.total).toFixed(1)} %`
 	let temp = `${gpu.temp}°C`
-	term.bold.moveTo(2, 8+i , `${name}  `)
-	term.bold.cyan.moveTo(2 + name.length, 8+i, `${gpu.ugpu}  `)
-	term.bold.moveTo(3 + name.length + gpu.ugpu.length, 8+i, `Memory: `)
-	term.bold.cyan.moveTo(11 + name.length + gpu.ugpu.length, 8+i, `${mem}  `)
-	term.bold.moveTo(12 + name.length + gpu.ugpu.length + mem.length, 8+i, `Temperature: `)
+	// term.bold.moveTo(2, 8+i , `${name}  `)
+	// term.bold.cyan.moveTo(2 + name.length, 8+i, `${gpu.ugpu}  `)
+	// term.bold.moveTo(3 + name.length + gpu.ugpu.length, 8+i, `Memory: `)
+	// term.bold.cyan.moveTo(11 + name.length + gpu.ugpu.length, 8+i, `${mem}  `)
+	// term.bold.moveTo(12 + name.length + gpu.ugpu.length + mem.length, 8+i, `Temperature: `)
 
 	let t_x = 25 + name.length + gpu.ugpu.length + mem.length
 	if (gpu.temp >= 250) {
-		term.bold.red.moveTo(t_x, 8+i, `${temp}  `)
+		// term.bold.red.moveTo(t_x, 8+i, `${temp}  `)
 	} else if (gpu.temp >= 200) {
-		term.bold.yellow.moveTo(t_x, 8+i, `${temp}  `)
+		// term.bold.yellow.moveTo(t_x, 8+i, `${temp}  `)
 	} else {	
-		term.bold.cyan.moveTo(t_x, 8+i, `${temp}  `)
+		// term.bold.cyan.moveTo(t_x, 8+i, `${temp}  `)
 	}
 	
-	term.bold.moveTo(26 + name.length + gpu.ugpu.length + mem.length + temp.length, 8+i, `Power: `)
+	// term.bold.moveTo(26 + name.length + gpu.ugpu.length + mem.length + temp.length, 8+i, `Power: `)
 	if (!gpu.power) gpu.power = 'N/A'; else gpu.power += ` W     `;
 
 	let p_x = 33 + name.length + gpu.ugpu.length + mem.length + temp.length
 	if (gpu.power >= 250) {
-		term.bold.red.moveTo(p_x, 8+i, gpu.power)
+		// term.bold.red.moveTo(p_x, 8+i, gpu.power)
 	} else if (gpu.power >= 200) {
-		term.bold.yellow.moveTo(p_x, 8+i, gpu.power)
+		// term.bold.yellow.moveTo(p_x, 8+i, gpu.power)
 	} else {	
-		term.bold.cyan.moveTo(p_x, 8+i, gpu.power)
+		// term.bold.cyan.moveTo(p_x, 8+i, gpu.power)
 	}
 
   if ((gpu.temp >= 85 || gpu.temp < 50) && !isOverheat) {
@@ -304,116 +304,113 @@ GPU: ${gpu.ugpu} Temperature: ${gpu.temp}°C P: ${!gpu.power ? 'N\\A' : `${numer
 
 }
 
-if (process.argv[2]) {
-	// r.connect({ host: 'aws.touno.co', port: 6511 }, function(err, conn) {
-	// r.connect({ host: 'localhost', port: 28015 }, function(err, conn) {
-		// conn.use('miner')
-		nvidia.watch({ interval: 1 })
-		nvidia.on('gpu', gpu => {
-	   //  r.table('gpu_stats').insert({ 
-	   //  	miner: process.argv[2], gpu: {
-		  //    index: gpu.index,
-		  //    date: gpu.date.toDate(),
-		  //    name: gpu.name,
-		  //    device: gpu.device,
-		  //    bus: gpu.bus,
-		  //    domain: gpu.domain,
-		  //    temp: gpu.temp,
-		  //    ugpu: gpu.ugpu,
-		  //    umemory: gpu.umemory,
-		  //    power: gpu.power,
-		  //    clocks: gpu.clocks,
-		  //    fan: gpu.fan,
-		  //    memory: gpu.memory
-	   //  	} 
-	  	// }).run(conn)
-			graph.update = gpu.date
-			graph.gpu[gpu.index] = gpu
-		});
-  // })
+// r.connect({ host: 'aws.touno.co', port: 6511 }, function(err, conn) {
+// r.connect({ host: 'localhost', port: 28015 }, function(err, conn) {
+// 	conn.use('miner')
+// 	nvidia.watch({ interval: 1 })
+// 	nvidia.on('gpu', gpu => {
+//     r.table('gpu_stats').insert({ 
+//     	miner: process.argv[2], gpu: {
+// 	     index: gpu.index,
+// 	     date: gpu.date.toDate(),
+// 	     name: gpu.name,
+// 	     device: gpu.device,
+// 	     bus: gpu.bus,
+// 	     domain: gpu.domain,
+// 	     temp: gpu.temp,
+// 	     ugpu: gpu.ugpu,
+// 	     umemory: gpu.umemory,
+// 	     power: gpu.power,
+// 	     clocks: gpu.clocks,
+// 	     fan: gpu.fan,
+// 	     memory: gpu.memory
+//     	} 
+//   	}).run(conn)
+// 		graph.update = gpu.date
+// 		graph.gpu[gpu.index] = gpu
+// 	});
+//  })
 
-	let header = `  Computer Name: ${os.hostname()} [${process.argv[2]}]  `
-	term.bold.white.bgGreen.moveTo((term.width / 2) - (header.length / 2),2, header)
+// let header = `  Computer Name: ${os.hostname()} [${process.argv[2]}]  `
+// term.bold.white.bgGreen.moveTo((term.width / 2) - (header.length / 2),2, header)
 
-	term.moveTo(2,4, `Exchange:`)
-	term.green.bold.moveTo(12,4, `0.00 THB`)
+// term.moveTo(2,4, `Exchange:`)
+// term.green.bold.moveTo(12,4, `0.00 THB`)
 
-	term.moveTo((term.width / 2) + 2,4, `Daily:`)
-	term.green.bold.moveTo((term.width / 2) + 9,4, `0.00 THB`)
+// term.moveTo((term.width / 2) + 2,4, `Daily:`)
+// term.green.bold.moveTo((term.width / 2) + 9,4, `0.00 THB`)
 
-	term.moveTo((term.width / 2),5, `Monthly:`)
-	term.green.bold.moveTo((term.width / 2) + 9,5, `0.00 THB`)
+// term.moveTo((term.width / 2),5, `Monthly:`)
+// term.green.bold.moveTo((term.width / 2) + 9,5, `0.00 THB`)
 
-	term.moveTo(3,5, `Balance:`)
-	term.green.bold.moveTo(12,5, `0.00 THB`)
+// term.moveTo(3,5, `Balance:`)
+// term.green.bold.moveTo(12,5, `0.00 THB`)
 
-	term.moveTo(2,7, `List GPU update at `)
+// term.moveTo(2,7, `List GPU update at `)
 
-	term.moveTo(47,7, `| unpaid:`)
-	term.green.bold.moveTo(57,7, `0.00 THB`)
+// term.moveTo(47,7, `| unpaid:`)
+// term.green.bold.moveTo(57,7, `0.00 THB`)
 
-	term.moveTo(2,16, `List Algorithm updated.`)
-	setInterval(() => {
-		term.yellow.bold.moveTo(21,7, graph.update.format('DD MMMM YYYY HH:mm:ss.SSS'))
-		term.red.bold.moveTo(5,6, `ERROR:`)
-		term.red.bold.moveTo(12,6, graph.error ? graph.error : 'N/A')
+// term.moveTo(2,16, `List Algorithm updated.`)
+// setInterval(() => {
+// 	term.yellow.bold.moveTo(21,7, graph.update.format('DD MMMM YYYY HH:mm:ss.SSS'))
+// 	term.red.bold.moveTo(5,6, `ERROR:`)
+// 	term.red.bold.moveTo(12,6, graph.error ? graph.error : 'N/A')
 
-		graph.gpu.forEach((item, i) => {
-			normalization(item, i)
-		})
-		graph.algo.forEach((item, i) => {
-			term.moveTo(2, 17+i, `- algo`)
-			term.yellow.bold.moveTo(9, 17+i, `'${item.algo}'`)
-			term.moveTo(26, 17+i, `unpaid:`)
-			term.green.bold.moveTo(34, 17+i, item.unpaid)
-			term.moveTo(45, 17+i, `BTC`)
-		})
-		term.white('\n')
-	}, 1000)
-	term.white('')
-	term.hideCursor()
+// 	graph.gpu.forEach((item, i) => {
+// 		normalization(item, i)
+// 	})
+// 	graph.algo.forEach((item, i) => {
+// 		term.moveTo(2, 17+i, `- algo`)
+// 		term.yellow.bold.moveTo(9, 17+i, `'${item.algo}'`)
+// 		term.moveTo(26, 17+i, `unpaid:`)
+// 		term.green.bold.moveTo(34, 17+i, item.unpaid)
+// 		term.moveTo(45, 17+i, `BTC`)
+// 	})
+// 	term.white('\n')
+// }, 1000)
+// term.white('')
+// term.hideCursor()
 
-	slack.logs(`${process.argv[2]}`, `\`GPU-Watcher\` Starting...`)
+slack.logs(`${process.argv[2]}`, `\`GPU-Watcher\` Starting...`)
 
-	exchange().then(() => {
-		return unpaid()
-	}).then(() => {
-		return provider()
-	})
-	
+exchange().then(() => {
+	return unpaid()
+}).then(() => {
+	return provider()
+})
 
-	// Get Unpaid balance
-	new cron.CronJob({
-	  cronTime: '00 * * * *',
-	  onTick: () => {
-	  	unpaid().then(() => provider()).then(() => getMessagePaid())
-	  },
-	  start: true,
-	  timeZone: 'Asia/Bangkok'
-	});
 
-	// Get Unpaid balance
-	new cron.CronJob({
-	  cronTime: '45 16 * * *',
-	  onTick: getMessageDaily,
-	  start: true,
-	  timeZone: 'Asia/Bangkok'
-	});
+// Get Unpaid balance
+new cron.CronJob({
+  cronTime: '00 * * * *',
+  onTick: () => {
+  	unpaid().then(() => provider()).then(() => getMessagePaid())
+  },
+  start: true,
+  timeZone: 'Asia/Bangkok'
+});
 
-	// Get Unpaid balance
-	new cron.CronJob({
-	  cronTime: '45 18 * * *',
-	  onTick: balance,
-	  start: true,
-	  timeZone: 'Asia/Bangkok'
-	});
+// Get Unpaid balance
+new cron.CronJob({
+  cronTime: '45 16 * * *',
+  onTick: getMessageDaily,
+  start: true,
+  timeZone: 'Asia/Bangkok'
+});
 
-	// Exchange rate
-	new cron.CronJob({
-	  cronTime: '*/15 * * * *',
-	  onTick: exchange,
-	  start: true,
-	  timeZone: 'Asia/Bangkok'
-	});
+// Get Unpaid balance
+new cron.CronJob({
+  cronTime: '45 18 * * *',
+  onTick: balance,
+  start: true,
+  timeZone: 'Asia/Bangkok'
+});
 
-}
+// Exchange rate
+new cron.CronJob({
+  cronTime: '*/15 * * * *',
+  onTick: exchange,
+  start: true,
+  timeZone: 'Asia/Bangkok'
+});

@@ -10,7 +10,7 @@ const client = new line.Client({
   channelAccessToken: 'aLWtThxKjje3XZPX9MMczLk/0tHwqCN7OVcfbfLSKFAMb8aLSL7VGW9xX/SeSCCEjE/N8TEiKTMJmOzWPrPvx3Ki03ezUhlS8CE8XkKNOLjlugrrXbD5lrpD4IAsehEleBS+mNcAjfLTtRim7qaeWQdB04t89/1O/w1cDnyilFU='
 });
 
-const nvidia 	= require('./nvidia-smi')
+// const nvidia 	= require('./nvidia-smi')
 const slack 	= require('./slack-webhook')
 // **GPU#0** GeForce GTX 1080 Ti 11GB - Temperature: `84 °C` Power: `245.54 W`
 let isOverheat = false, atOverheat = null
@@ -33,7 +33,7 @@ let exchange = () => request({
 }).then(res => {
 	graph.exchange = res['THB'].sell
 	let exchange = `${numeral(graph.exchange).format('0,0.00')} THB`
-	term.blue.bold.moveTo(12,4, exchange)
+	// term.blue.bold.moveTo(12,4, exchange)
 	console.log(`(1 BTC)`)
 	// console.log(`${res['THB'].sell} ${res['THB'].symbol}`)
 }).catch((err) => {
