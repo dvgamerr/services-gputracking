@@ -70,6 +70,7 @@ let main = async (conn) => {
   await dbDelete(conn, 'gpu', item => rdb.now().sub(item('created')).gt(60 * 60 * 24 * 365))
 }
 
+console.log(`[hardware-monitor] Started`)
 setInterval(async () => {
   let conn = await dbConnection()
   main(conn).catch(ex => {
