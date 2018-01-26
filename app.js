@@ -1,4 +1,5 @@
 const request = require('request-promise')
+const cron = require('cron')
 // const moment = require('moment')
 // const numeral = require('numeral')
 const rdb = require('rethinkdb')
@@ -67,7 +68,6 @@ let main = async (conn) => {
     }
   }
   await dbInsert(conn, 'gpu', miner)
-  await dbDelete(conn, 'gpu', item => rdb.now().sub(item('created')).gt(60 * 60 * 24 * 365))
 }
 
 console.log(`[hardware-monitor] Started`)
@@ -77,3 +77,14 @@ setInterval(async () => {
     console.log(`[hardware-monitor] '${ex.message || ex}'`)
   })
 }, 1000)
+
+let jobDelete = new cron.CronJob({
+  cronTime: '0 0 * * *',
+  onTick: async () => {
+    let conn = await dbConnection()
+    console.log(`[hardware-monitor] delete ${jobDelete.running ? 'complated' : 'stoped'}.`)
+    await dbDelete(conn, 'gpu', item => rdb.now().sub(item('created')).gt(60 * 60 * 24 * 365))
+  },
+  start: true,
+  timeZone: 'Asia/Bangkok'
+})
