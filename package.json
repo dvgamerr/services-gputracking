@@ -5,23 +5,35 @@
   "main": "app.js",
   "scripts": {
     "start": "node app.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "env-cmd .env node app.js",
+    "lint": "eslint --ext .js --ignore-path .gitignore ."
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/dvgamer/gpu-watcher.git"
+    "url": "git+https://github.com/dvgamer/gpuminer-tracking.git"
   },
   "author": "Kananek Thongkam",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/dvgamer/gpu-watcher/issues"
+    "url": "https://github.com/dvgamer/gpuminer-tracking/issues"
   },
-  "homepage": "https://github.com/dvgamer/gpu-watcher#readme",
+  "homepage": "https://github.com/dvgamer/gpuminer-tracking#readme",
   "dependencies": {
     "moment": "^2.18.1",
     "numeral": "^2.0.6",
     "request": "^2.81.0",
     "request-promise": "^4.2.1",
     "rethinkdb": "^2.3.3"
+  },
+  "devDependencies": {
+    "babel-eslint": "^8.2.1",
+    "env-cmd": "^7.0.0",
+    "eslint": "^4.16.0",
+    "eslint-config-standard": "^11.0.0-beta.0",
+    "eslint-plugin-html": "^4.0.2",
+    "eslint-plugin-import": "^2.8.0",
+    "eslint-plugin-node": "^5.2.1",
+    "eslint-plugin-promise": "^3.6.0",
+    "eslint-plugin-standard": "^3.0.1"
   }
 }

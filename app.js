@@ -1,12 +1,43 @@
 const request = require('request-promise')
-const moment = require('moment')
-const numeral = require('numeral')
+// const moment = require('moment')
+// const numeral = require('numeral')
 const rdb = require('rethinkdb')
 
+const dbConnection = () => {
+  let connection = {
+    host: process.env.RETHINKDB_HOST,
+    port: process.env.RETHINKDB_PORT,
+    db: 'miner'
+  }
+  return new Promise((resolve, reject) => {
+    rdb.connect(connection, (err, conn) => {
+      if (err) reject(err); else resolve(conn)
+    })
+  })
+}
 
-let main = async () => {
+const dbInsert = (conn, table, data) => {
+  return new Promise((resolve, reject) => {
+    rdb.table(table).insert(data).run(conn, (err, result) => {
+      if (err) reject(err); else resolve(result)
+    })
+  })
+}
+
+const dbDelete = (conn, table, filter) => {
+  return new Promise((resolve, reject) => {
+    rdb.table(table).filter(filter).delete().run(conn, (err, result) => {
+      if (err) reject(err); else resolve(result)
+    })
+  })
+}
+
+if (!process.env.RETHINKDB_HOST) throw new Error(`Required 'RETHINKDB_HOST' environment.`)
+if (!process.env.RETHINKDB_PORT) throw new Error(`Required 'RETHINKDB_PORT' environment.`)
+
+let main = async (conn) => {
   let data = await request({
-    url: `http://192.168.1.3:8085/data.json`,
+    url: `http://${process.env.MONITOR_HOST ? process.env.MONITOR_HOST : '127.0.0.1'}${process.env.MONITOR_PORT ? `:${process.env.MONITOR_PORT}` : ':8085'}/data.json`,
     json: true
   })
   let miner = {
@@ -35,40 +66,13 @@ let main = async () => {
       miner.device.push(device)
     }
   }
-  console.log(miner)
-  console.log('----------------------------------------------------')
+  await dbInsert(conn, 'gpu', miner)
+  await dbDelete(conn, 'gpu', item => rdb.now().sub(item('created')).gt(60 * 60 * 24 * 365))
 }
 
-setInterval(() => {
-  main().then(() => {
-
-  }).catch(ex => {
-    console.log(ex.message || ex)
+setInterval(async () => {
+  let conn = await dbConnection()
+  main(conn).catch(ex => {
+    console.log(`[hardware-monitor] '${ex.message || ex}'`)
   })
 }, 1000)
-// r.connect({ host: 'aws.touno.co', port: 6511 }, function(err, conn) {
-// r.connect({ host: 'localhost', port: 28015 }, function(err, conn) {
-// 	conn.use('miner')
-// 	nvidia.watch({ interval: 1 })
-// 	nvidia.on('gpu', gpu => {
-//     r.table('gpu_stats').insert({ 
-//     	miner: process.argv[2], gpu: {
-// 	     index: gpu.index,
-// 	     date: gpu.date.toDate(),
-// 	     name: gpu.name,
-// 	     device: gpu.device,
-// 	     bus: gpu.bus,
-// 	     domain: gpu.domain,
-// 	     temp: gpu.temp,
-// 	     ugpu: gpu.ugpu,
-// 	     umemory: gpu.umemory,
-// 	     power: gpu.power,
-// 	     clocks: gpu.clocks,
-// 	     fan: gpu.fan,
-// 	     memory: gpu.memory
-//     	} 
-//   	}).run(conn)
-// 		graph.update = gpu.date
-// 		graph.gpu[gpu.index] = gpu
-// 	});
-//  })
