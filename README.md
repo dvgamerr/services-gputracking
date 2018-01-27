@@ -1,8 +1,8 @@
-## gpuminer-line api notification
-gpuminer-line support `NVIDIA GTX1080 TI` and `nicehash.com` only 
+## GPU Tracking Open Hardware Monitor `v1.0`
+ระบบ Tracking GPU และเก็บข้อมูลทุกๆ วินาทีลง RethinkDB
 
 ```bash
 npm i
-npm run miner1
+npm run dev
 ```
 
