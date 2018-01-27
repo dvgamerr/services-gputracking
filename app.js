@@ -1,6 +1,6 @@
 const request = require('request-promise')
 const cron = require('cron')
-// const moment = require('moment')
+const moment = require('moment')
 // const numeral = require('numeral')
 const rdb = require('rethinkdb')
 
@@ -67,15 +67,17 @@ let main = async (conn) => {
       miner.device.push(device)
     }
   }
-  await dbInsert(conn, 'gpu', miner)
+  if (process.env.NODE_ENV !== 'development') {
+    await dbInsert(conn, 'gpu', miner)
+  } else {
+    console.log(`${moment(miner.created).format('YYYY-MM-DD HH:mm:ss')} | ${miner.device[0].temperature} ${miner.device[1].temperature} ${miner.device[2].temperature} ${miner.device[3].temperature} ${miner.device[4].temperature}`)
+  }
 }
 
 console.log(`[hardware-monitor] Started`)
 setInterval(async () => {
   let conn = await dbConnection()
-  main(conn).catch(ex => {
-    console.log(`[hardware-monitor] '${ex.message || ex}'`)
-  })
+  main(conn)
 }, 1000)
 
 let jobDelete = new cron.CronJob({
