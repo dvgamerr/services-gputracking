@@ -1,8 +1,22 @@
 const request = require('request-promise')
 const cron = require('cron')
 const moment = require('moment')
-// const numeral = require('numeral')
 const rdb = require('rethinkdb')
+const Raven = require('raven')
+
+if (process.env.RAVEN_CONFIG) {
+  Raven.config(process.env.RAVEN_CONFIG).install((err, initialErr, eventId) => {
+    console.error(err)
+    process.exit(1)
+  })
+}
+const RavenException = ex => {
+  if (process.env.NODE_ENV === 'production' && process.env.RAVEN_CONFIG) {
+    Raven.captureException(ex)
+  } else {
+    console.log(`${ex.message}`)
+  }
+}
 
 const dbConnection = () => {
   let connection = {
@@ -74,18 +88,18 @@ let main = async (conn) => {
   }
 }
 
-console.log(`[hardware-monitor] Started`)
-setInterval(async () => {
-  let conn = await dbConnection()
-  main(conn)
-}, 1000)
+console.log(`[hardware-monitor] connecting '${process.env.RETHINKDB_HOST}'...`)
+dbConnection().then(async conn => {
+  console.log(`[hardware-monitor] connected, monitor started`)
+  setInterval(async () => {  await main(conn).catch(RavenException) }, 1000)
+}).catch(RavenException)
 
 let jobDelete = new cron.CronJob({
   cronTime: '0 0 * * *',
   onTick: async () => {
     let conn = await dbConnection()
-    console.log(`[hardware-monitor] delete ${jobDelete.running ? 'complated' : 'stoped'}.`)
-    await dbDelete(conn, 'gpu', item => rdb.now().sub(item('created')).gt(60 * 60 * 24 * 365))
+    console.log(`[hardware-monitor] rethinkdb remove colletion ${jobDelete.running ? 'complated' : 'stoped'}.`)
+    await dbDelete(conn, 'gpu', item => rdb.now().sub(item('created')).gt(60 * 60 * 24 * 365)).catch(RavenException)
   },
   start: true,
   timeZone: 'Asia/Bangkok'
