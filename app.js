@@ -11,6 +11,7 @@ if (process.env.RAVEN_CONFIG) {
   })
 }
 const RavenException = ex => {
+  if (/ECONNREFUSED/ig.test(ex.message)) process.exit(1)
   if (process.env.NODE_ENV === 'production' && process.env.RAVEN_CONFIG) {
     Raven.captureException(ex)
   } else {
