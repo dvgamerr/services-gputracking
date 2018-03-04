@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "dev": "cls && npm run lint && env-cmd .env_dev node index.js",
+    "dev": "cls && npm run lint && env-cmd .env node index.js",
     "lint": "eslint --ext .js --ignore-path .gitignore ."
   },
   "repository": {
@@ -20,11 +20,13 @@
   "homepage": "https://github.com/dvgamer/task-gputracking#readme",
   "dependencies": {
     "cron": "^1.3.0",
+    "gpu-info": "0.0.1",
     "moment": "^2.18.1",
     "numeral": "^2.0.6",
     "request": "^2.81.0",
     "request-promise": "^4.2.1",
-    "rethinkdb": "^2.3.3"
+    "rethinkdb": "^2.3.3",
+    "touno.io": "git+https://github.com/dvgamer/module-touno.io.git"
   },
   "devDependencies": {
     "babel-eslint": "^8.2.1",
