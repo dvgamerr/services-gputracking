@@ -1,6 +1,5 @@
 const { Raven } = require('touno.io')
 const fs = require('fs')
-const os = require('os')
 const Query = require('./query')
 const { EventEmitter } = require('events')
 const spawn = require('child_process').spawn
@@ -27,8 +26,6 @@ let gpu = [
 ]
 
 let emiter = new EventEmitter()
-console.log('COMPUTER:', os.hostname())
-console.log(Query)
 emiter.on('watch', config => {
   config = config || {}
   let logs = ''
@@ -39,9 +36,8 @@ emiter.on('watch', config => {
       logs += data
       if (/\r\n/ig.test(logs)) {
         let smi = new Query(gpu, /(.*?)\r\n/ig.exec(logs)[1])
-        console.log(smi)
+        emiter.emit('gpu', smi)
         logs = logs.substring(logs.indexOf('\r\n') + 2)
-        //   emiter.emit('gpu', new smi(logs.replace('\r\n','')));
       }
     })
 

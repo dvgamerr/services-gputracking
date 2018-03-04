@@ -17,20 +17,20 @@ class Query {
     this.bus = vender[2]
     this.domain = vender[1]
 
-    this.temp = getInt(parse('temperature.gpu'))
-    this.ugpu = getInt(parse('utilization.gpu'))
-    this.umemory = getInt(parse('utilization.memory'))
+    this.temp = parse('temperature.gpu')
+    this.ugpu = parse('utilization.gpu')
+    this.umemory = parse('utilization.memory')
     this.power = {
-      draw: getInt(parse('power.draw')),
-      limit: getInt(parse('power.limit'))
+      draw: parse('power.draw'),
+      limit: parse('power.limit')
     }
 
-    this.clocks = getInt(parse('clocks.mem'))
-    this.fan = getInt(parse('fan.speed'))
+    this.clocks = parse('clocks.mem')
+    this.fan = parse('fan.speed')
     this.memory = {
-      total: getInt(parse('memory.total')),
-      free: getInt(parse('memory.free')),
-      used: getInt(parse('memory.used'))
+      total: parse('memory.total'),
+      free: parse('memory.free'),
+      used: parse('memory.used')
     }
   }
 }

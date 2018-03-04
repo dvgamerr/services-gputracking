@@ -1,9 +1,11 @@
 const nvsmi = require('./nvidia-smi')
+const os = require('os')
 
-nvsmi.emit('watch')
-nvsmi.emit('gpu', (data) => {
-  console.log('gpu', data)
+nvsmi.emit('watch', { id: 0, interval: 1 })
+nvsmi.on('gpu', smi => {
+  console.log(os.hostname(), smi)
 })
+
 // const request = require('request-promise')
 // const cron = require('cron')
 // const moment = require('moment')
