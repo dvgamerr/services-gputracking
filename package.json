@@ -1,28 +1,27 @@
 {
-  "name": "gpuminer-tracking",
-  "version": "2.0.0",
+  "name": "task-gputracking",
+  "version": "1.0.0",
   "description": "gpu watcher and realtime upload data to server (nvidia version)",
-  "main": "app.js",
+  "main": "index.js",
   "scripts": {
-    "start": "node app.js",
-    "dev": "env-cmd .env_dev node app.js",
+    "start": "node index.js",
+    "dev": "cls && npm run lint && env-cmd .env_dev node index.js",
     "lint": "eslint --ext .js --ignore-path .gitignore ."
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/dvgamer/gpuminer-tracking.git"
+    "url": "git+https://github.com/dvgamer/task-gputracking.git"
   },
   "author": "Kananek Thongkam",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/dvgamer/gpuminer-tracking/issues"
+    "url": "https://github.com/dvgamer/task-gputracking/issues"
   },
-  "homepage": "https://github.com/dvgamer/gpuminer-tracking#readme",
+  "homepage": "https://github.com/dvgamer/task-gputracking#readme",
   "dependencies": {
     "cron": "^1.3.0",
     "moment": "^2.18.1",
     "numeral": "^2.0.6",
-    "raven": "^2.4.1",
     "request": "^2.81.0",
     "request-promise": "^4.2.1",
     "rethinkdb": "^2.3.3"
