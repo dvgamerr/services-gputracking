@@ -1,10 +1,42 @@
+const { debug } = require('touno.io').Variable
+const { Raven } = require('touno.io')
+// const os = require('os')
 const nvsmi = require('./nvidia-smi')
-const os = require('os')
+let GPU_MAX = process.env.GPU_MAX || 1
 
-nvsmi.emit('watch', { id: 0, interval: 1 })
-nvsmi.on('gpu', smi => {
-  console.log(os.hostname(), smi)
-})
+nvsmi.on('error', ex => { Raven(ex) })
+for (let i = 0; i < GPU_MAX; i++) {
+  nvsmi.emit('gpu', { id: i, interval: 1 }, smi => {
+    // let gpu = {
+    //   uuid: smi.uuid,
+    //   index: smi.index,
+    //   name: smi.name,
+    //   compute: os.hostname(),
+    //   state: smi.state,
+    //   bus_id: smi.bus_id,
+    //   updated: smi.date
+    // }
+    if (debug) {
+      process.stdout.write(`${smi.index}:${smi.temp}°C (${smi.fan}%) |`)
+      process.stdout.cursorTo(0 + (14 * i))
+    }
+  })
+}
+
+// GPUMINER-01 Query {
+//   index: '2',
+//   uuid: 'GPU-b9e798e8-9ec2-e1f7-3467-4885adf3f6e2',
+//   state: 'P2',
+//   date: moment("2018-03-05T21:32:01.442"),
+//   name: 'GeForce GTX 1080 Ti',
+//   bus_id: '00000000:09:00.0',
+//   temp: '71',
+//   ugpu: '100 %',
+//   umemory: '72 %',
+//   power: { draw: '252.03 W', limit: '250.00 W' },
+//   clocks: '5005 MHz',
+//   fan: '81 %',
+//   memory: { total: '11264 MiB', free: '3497 MiB', used: '7767 MiB' } }
 
 // const request = require('request-promise')
 // const cron = require('cron')

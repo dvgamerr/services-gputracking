@@ -1,50 +1,50 @@
-const { Raven } = require('touno.io')
 const fs = require('fs')
 const Query = require('./query')
+const list = require('./query-list')
 const { EventEmitter } = require('events')
 const spawn = require('child_process').spawn
 
 let NVSMIx64 = process.env.NVSMI || `C:/Program Files/NVIDIA Corporation/NVSMI/nvidia-smi.exe`
 
-let gpu = [
-  'index',
-  'timestamp',
-  'uuid',
-  'pstate',
-  'name',
-  'pci.bus_id',
-  'temperature.gpu',
-  'utilization.gpu',
-  'utilization.memory',
-  'memory.total',
-  'memory.free',
-  'memory.used',
-  'power.draw',
-  'power.limit',
-  'clocks.mem',
-  'fan.speed'
-]
-
 let emiter = new EventEmitter()
-emiter.on('watch', config => {
+emiter.on('gpu', (config, watcher) => {
   config = config || {}
   let logs = ''
   if (fs.existsSync(`${NVSMIx64}`)) {
-    let ls = spawn('cmd.exe', ['/c', NVSMIx64, `--query-gpu=${gpu.join(',')}`, `--format=csv,noheader`, `-l`, `${config.interval || 1}`])
+    let params = ['/c', NVSMIx64, `--query-gpu=${list.join(',')}`, `--format=csv,noheader`]
+    if (config.id > -1) {
+      params.push('-i')
+      params.push(config.id)
+    }
+    if (config.interval) {
+      params.push('-l')
+      params.push(config.interval)
+    }
 
+    let ls = spawn('cmd.exe', params)
     ls.stdout.on('data', data => {
-      logs += data
-      if (/\r\n/ig.test(logs)) {
-        let smi = new Query(gpu, /(.*?)\r\n/ig.exec(logs)[1])
-        emiter.emit('gpu', smi)
-        logs = logs.substring(logs.indexOf('\r\n') + 2)
+      try {
+        logs += data
+        if (/\r\n/ig.test(logs)) {
+          let csv = /(.*?)\r\n/ig.exec(logs)
+          if (csv[1] === 'No devices were found') {
+            emiter.emit('error', `${config.id}: ${csv[1]}`)
+          } else {
+            let smi = new Query(list, csv[1])
+            watcher(smi)
+          }
+          logs = logs.substring(logs.indexOf('\r\n') + 2)
+        }
+      } catch (ex) {
+        emiter.emit('error', ex)
       }
     })
 
-    ls.stderr.on('data', Raven)
-    ls.on('close', (code) => Raven(new Error(`${process.argv[2]}`, `\`nvidia-smi\` child process exited with code ${code}`)))
+    ls.stderr.on('data', data => {
+      emiter.emit('error', new Error(data.toString()))
+    })
   } else {
-    Raven(new Error(`Please install nvidia driver and check 'nvidia-smi.exe'.`))
+    emiter.emit('error', new Error(`Please install nvidia driver and check 'nvidia-smi.exe'.`))
   }
 })
 
