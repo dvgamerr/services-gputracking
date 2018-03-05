@@ -17,8 +17,7 @@ for (let i = 0; i < GPU_MAX; i++) {
     //   updated: smi.date
     // }
     if (debug) {
-      process.stdout.write(`${smi.index}:${smi.temp}°C (${smi.fan}%) |`)
-      process.stdout.cursorTo(0 + (14 * i))
+
     }
   })
 }
