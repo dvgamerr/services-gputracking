@@ -1,25 +1,41 @@
 const { debug } = require('touno.io').Variable
 const { Raven } = require('touno.io')
-// const os = require('os')
+const { LINE } = require('touno.io').Notify
+const os = require('os')
 const nvsmi = require('./nvidia-smi')
 let GPU_MAX = process.env.GPU_MAX || 1
+let IsShutdown = false
+let GPU = []
+let gpuUploadData = async (smi, i) => {
+  if (smi.alive) {
+    if (!GPU[i]) {
+      GPU[i] = {
+        uuid: smi.uuid,
+        index: smi.index,
+        name: smi.name,
+        compute: os.hostname(),
+        state: smi.state,
+        bus_id: smi.bus_id,
+        updated: smi.date
+      }
+    } else {
+      GPU[i].updated = smi.date
+    }
+  } else {
+    if (IsShutdown) {
+      LINE.Miner(`การ์ดจอ ${smi.index}:${smi.name} ดับ\nบนเครื่อง ${os.hostname()} ซึ่งกำลังรีสตาร์ทใน 10 วินาที.`)
+      //
+    }
+    IsShutdown = true
+  }
+  if (debug) {
+    console.log(gpu)
+  }
+}
 
 nvsmi.on('error', ex => { Raven(ex) })
 for (let i = 0; i < GPU_MAX; i++) {
-  nvsmi.emit('gpu', { id: i, interval: 1 }, smi => {
-    // let gpu = {
-    //   uuid: smi.uuid,
-    //   index: smi.index,
-    //   name: smi.name,
-    //   compute: os.hostname(),
-    //   state: smi.state,
-    //   bus_id: smi.bus_id,
-    //   updated: smi.date
-    // }
-    if (debug) {
-
-    }
-  })
+  nvsmi.emit('gpu', { id: i, interval: 1 }, gpuUploadData.bind(this, i))
 }
 
 // GPUMINER-01 Query {
