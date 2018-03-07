@@ -1,11 +1,19 @@
-const { debug } = require('touno.io').Variable
+// const { debug } = require('touno.io').Variable
 const { Raven } = require('touno.io')
 const { LINE } = require('touno.io').Notify
 const os = require('os')
+const util = require('util');
 const nvsmi = require('./nvidia-smi')
 let GPU_MAX = process.env.GPU_MAX || 1
 let IsShutdown = false
 let GPU = []
+
+const exec = util.promisify(require('child_process').exec);
+
+async function lsExample() {
+  const { stdout, stderr } = await exec('shutdown -r -t 10')
+}
+
 let gpuUploadData = async (smi, i) => {
   if (smi.alive) {
     if (!GPU[i]) {
@@ -22,17 +30,13 @@ let gpuUploadData = async (smi, i) => {
       GPU[i].updated = smi.date
     }
   } else {
-    if (IsShutdown) {
+    if (!IsShutdown) {
       LINE.Miner(`การ์ดจอ ${smi.index}:${smi.name} ดับ\nบนเครื่อง ${os.hostname()} ซึ่งกำลังรีสตาร์ทใน 10 วินาที.`)
-      //
     }
     IsShutdown = true
   }
-  if (debug) {
-    console.log(gpu)
-  }
 }
-
+let smi = { index: 0, name: 'GT1080 Ti' }
 nvsmi.on('error', ex => { Raven(ex) })
 for (let i = 0; i < GPU_MAX; i++) {
   nvsmi.emit('gpu', { id: i, interval: 1 }, gpuUploadData.bind(this, i))
