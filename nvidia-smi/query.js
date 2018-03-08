@@ -16,7 +16,7 @@ class Query {
     if (!isLost('temperature.gpu') && !isLost('power.draw') && !isLost('fan.speed')) {
       this.alive = true
       this.state = parse('pstate')
-      this.date = moment(parse('timestamp'), 'YYYY/MM/DD hh:mm:ss.SSS')
+      this.date = moment(parse('timestamp'), 'YYYY/MM/DD hh:mm:ss.SSS').toDate()
       this.bus_id = parse('pci.bus_id')
       this.temp = getInt(parse('temperature.gpu'))
       this.ugpu = getInt(parse('utilization.gpu'))

@@ -88,7 +88,7 @@ rdbConnection().then(conn => {
     cronTime: '0 0 * * *',
     onTick: async () => {
       let result = await r.db('miner').table('gpu_01').filter(item => {
-        return r.now().sub(item('created')).gt(60 * 60 * 24 * 365)
+        return r.now().sub(item('created')).gt(60 * 60 * 24 * 30)
       }).delete().run(conn)
       console.log(`[GPU] RethinkDB remove ${result.deleted} colletion.`)
     },
@@ -194,3 +194,14 @@ rdbConnection().then(conn => {
 //   console.log(`[hardware-monitor] connected, monitor started`)
 //   setInterval(async () => {  await main(conn).catch(RavenException) }, 1000)
 // }).catch(RavenException)
+
+// let jobDelete = new cron.CronJob({
+//   cronTime: '0 0 * * *',
+//   onTick: async () => {
+//     let conn = await dbConnection()
+//     console.log(`[hardware-monitor] rethinkdb remove colletion ${jobDelete.running ? 'complated' : 'stoped'}.`)
+//     await dbDelete(conn, 'gpu', item => rdb.now().sub(item('created')).gt(60 * 60 * 24 * 365)).catch(RavenException)
+//   },
+//   start: true,
+//   timeZone: 'Asia/Bangkok'
+// })
