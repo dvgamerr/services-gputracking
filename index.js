@@ -84,7 +84,7 @@ rdbConnection().then(conn => {
     })
   }
 
-  let jobDelete = new cron.CronJob({
+  let job = new cron.CronJob({
     cronTime: '0 0 * * *',
     onTick: async () => {
       let result = await r.db('miner').table('gpu_01').filter(item => {
@@ -95,8 +95,7 @@ rdbConnection().then(conn => {
     start: true,
     timeZone: 'Asia/Bangkok'
   })
-
-
+  console.log(`[GPU] Add Tasks ${job.running ? 'started' : 'stoped'}`)
 }).catch(ex => {
   Raven(ex)
   process.exit(0)
