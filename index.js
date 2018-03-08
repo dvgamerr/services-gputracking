@@ -5,7 +5,7 @@ const os = require('os')
 const util = require('util')
 const nvsmi = require('./nvidia-smi')
 const exec = util.promisify(require('child_process').exec)
-
+const sms = require('sms-gateway-nodejs')('info.dvgamer@gmail.com', 'dvg7po8ai')
 let GPU_MAX = process.env.GPU_MAX || 1
 let IsShutdown = false
 let GPU = []
@@ -39,9 +39,24 @@ let gpuUploadData = async (i, smi) => {
   }
 }
 
-nvsmi.on('error', ex => { Raven(ex) })
+sms.device.listOfDevices(1).then(async res => {
+  conosle.log('--- listOfDevices')
+  console.log(res)
+  let msg = await sms.message.sendMessageToNumber('81450', '+66970347607', 'Hello world :)')
+  conosle.log('--- sendMessageToNumber')
+  console.log(msg)
+}).then(ex => {
+  console.log(`ERROR::${ex.message}`)
+})
+
+// sms.message.listOfMessages(1).then((response) => {
+//   console.log(response)
+// }).catch((error) => {
+//   console.log('error', error)
+// })
+nvsmi.on('errora', ex => { Raven(ex) })
 for (let i = 0; i < GPU_MAX; i++) {
-  nvsmi.emit('gpu', { id: i, interval: 1 }, gpuUploadData.bind(this, i))
+  nvsmi.emit('gpus', { id: i, interval: 1 }, gpuUploadData.bind(this, i))
 }
 
 // GPUMINER-01 Query {
