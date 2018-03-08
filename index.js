@@ -1,63 +1,90 @@
 const { debug } = require('touno.io').Variable
 const { Raven } = require('touno.io')
 const { LINE } = require('touno.io').Notify
+const { r, rdbConnection } = require('touno.io/rethinkdb')
 const os = require('os')
 const util = require('util')
 const nvsmi = require('./nvidia-smi')
 const exec = util.promisify(require('child_process').exec)
-const sms = require('sms-gateway-nodejs')('info.dvgamer@gmail.com', 'dvg7po8ai')
+// const sms = require('sms-gateway-nodejs')('info.dvgamer@gmail.com', 'dvg7po8ai')
 let GPU_MAX = process.env.GPU_MAX || 1
 let IsShutdown = false
 let GPU = []
 
-let sendRestart = async () => {
-  const { stderr } = await exec('shutdown -r -t 10')
-  if (stderr) throw new Error(stderr)
-}
-
-let gpuUploadData = async (i, smi) => {
-  if (smi.alive) {
-    if (!GPU[i]) {
-      GPU[i] = {
-        uuid: smi.uuid,
-        index: smi.index,
-        name: smi.name,
-        compute: os.hostname(),
-        state: smi.state,
-        bus_id: smi.bus_id,
-        updated: smi.date
-      }
-    } else {
-      GPU[i].updated = smi.date
-    }
-  } else {
-    if (!IsShutdown) {
-      LINE.Miner(`การ์ดจอ ${smi.index}:${smi.name} ดับ\nบนเครื่อง ${os.hostname()} ซึ่งกำลังรีสตาร์ทใน 10 วินาที.`)
-      if (!debug) sendRestart()
-    }
-    IsShutdown = true
-  }
-}
-
-sms.device.listOfDevices(1).then(async res => {
-  conosle.log('--- listOfDevices')
-  console.log(res)
-  let msg = await sms.message.sendMessageToNumber('81450', '+66970347607', 'Hello world :)')
-  conosle.log('--- sendMessageToNumber')
-  console.log(msg)
-}).then(ex => {
-  console.log(`ERROR::${ex.message}`)
-})
+// sms.device.listOfDevices(1).then(async res => {
+//   conosle.log('--- listOfDevices')
+//   console.log(res)
+//   let msg = await sms.message.sendMessageToNumber('81450', '+66970347607', 'Hello world :)')
+//   conosle.log('--- sendMessageToNumber')
+//   console.log(msg)
+// }).then(ex => {
+//   console.log(`ERROR::${ex.message}`)
+// })
 
 // sms.message.listOfMessages(1).then((response) => {
 //   console.log(response)
 // }).catch((error) => {
 //   console.log('error', error)
 // })
-nvsmi.on('errora', ex => { Raven(ex) })
-for (let i = 0; i < GPU_MAX; i++) {
-  nvsmi.emit('gpus', { id: i, interval: 1 }, gpuUploadData.bind(this, i))
-}
+console.log(`[GPU] RethinkDB Connectioning...`)
+rdbConnection().then(conn => {
+  let wait = 10
+  let sendRestart = async () => {
+    const { stderr } = await exec(`shutdown -r -t ${wait}`)
+    if (stderr) throw new Error(stderr)
+  }
+
+  let gpuUploadData = async (i, smi) => {
+    if (smi.alive) {
+      if (!GPU[i]) {
+        console.log(`[GPU] Processing ${smi.index}:${smi.name} ${smi.bus_id}.`)
+        GPU[i] = {
+          gpu_id: smi.uuid,
+          index: smi.index,
+          name: smi.name,
+          compute: os.hostname(),
+          state: smi.state,
+          bus_id: smi.bus_id,
+          updated: smi.date
+        }
+      } else {
+        GPU[i].updated = smi.date
+      }
+      let result = await r.db('miner').table('gpu_01').insert({
+        gpu_id: smi.uuid,
+        temp: smi.temp,
+        ugpu: smi.ugpu,
+        umemory: smi.umemory,
+        power: smi.power,
+        clocks: smi.clocks,
+        fan: smi.fan,
+        memory: smi.memory
+      }).run(conn)
+      if (!result.inserted) throw new Error(`gputracking cant't inserted data.`)
+    } else {
+      if (!IsShutdown) {
+        LINE.Miner(`การ์ดจอ ${smi.index}:${smi.name} ดับ\nบนเครื่อง ${os.hostname()} ซึ่งกำลังรีสตาร์ทใน ${wait} วินาที.`)
+        if (!debug) sendRestart()
+      }
+      IsShutdown = true
+    }
+  }
+
+  nvsmi.on('error', ex => { Raven(ex) })
+
+  console.log(`[GPU] ${os.hostname()} nvidia-smi processing ${GPU_MAX} card.`)
+  for (let i = 0; i < GPU_MAX; i++) {
+    nvsmi.emit('gpu', { id: i, interval: 1 }, smi => {
+      gpuUploadData(i, smi).catch(ex => {
+        Raven(ex)
+        process.exit(0)
+      })
+    })
+  }
+}).catch(ex => {
+  Raven(ex)
+  process.exit(0)
+})
 
 // GPUMINER-01 Query {
 //   index: '2',
@@ -77,7 +104,6 @@ for (let i = 0; i < GPU_MAX; i++) {
 // const request = require('request-promise')
 // const cron = require('cron')
 // const moment = require('moment')
-// const rdb = require('rethinkdb')
 
 // const dbConnection = () => {
 //   let connection = {
