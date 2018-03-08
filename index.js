@@ -2,6 +2,7 @@ const { debug } = require('touno.io').Variable
 const { Raven } = require('touno.io')
 const { LINE } = require('touno.io').Notify
 const { r, rdbConnection } = require('touno.io/rethinkdb')
+const cron = require('cron')
 const os = require('os')
 const util = require('util')
 const nvsmi = require('./nvidia-smi')
@@ -52,6 +53,7 @@ rdbConnection().then(conn => {
       }
       let result = await r.db('miner').table('gpu_01').insert({
         gpu_id: smi.uuid,
+        created: smi.date,
         temp: smi.temp,
         ugpu: smi.ugpu,
         umemory: smi.umemory,
@@ -81,6 +83,20 @@ rdbConnection().then(conn => {
       })
     })
   }
+
+  let jobDelete = new cron.CronJob({
+    cronTime: '0 0 * * *',
+    onTick: async () => {
+      let result = await r.db('miner').table('gpu_01').filter(item => {
+        return r.now().sub(item('created')).gt(60 * 60 * 24 * 365)
+      }).delete().run(conn)
+      console.log(`[GPU] RethinkDB remove ${result.deleted} colletion.`)
+    },
+    start: true,
+    timeZone: 'Asia/Bangkok'
+  })
+
+
 }).catch(ex => {
   Raven(ex)
   process.exit(0)
@@ -102,7 +118,6 @@ rdbConnection().then(conn => {
 //   memory: { total: '11264 MiB', free: '3497 MiB', used: '7767 MiB' } }
 
 // const request = require('request-promise')
-// const cron = require('cron')
 // const moment = require('moment')
 
 // const dbConnection = () => {
@@ -180,14 +195,3 @@ rdbConnection().then(conn => {
 //   console.log(`[hardware-monitor] connected, monitor started`)
 //   setInterval(async () => {  await main(conn).catch(RavenException) }, 1000)
 // }).catch(RavenException)
-
-// let jobDelete = new cron.CronJob({
-//   cronTime: '0 0 * * *',
-//   onTick: async () => {
-//     let conn = await dbConnection()
-//     console.log(`[hardware-monitor] rethinkdb remove colletion ${jobDelete.running ? 'complated' : 'stoped'}.`)
-//     await dbDelete(conn, 'gpu', item => rdb.now().sub(item('created')).gt(60 * 60 * 24 * 365)).catch(RavenException)
-//   },
-//   start: true,
-//   timeZone: 'Asia/Bangkok'
-// })
