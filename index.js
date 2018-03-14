@@ -60,10 +60,9 @@ rdbConnection().then(async conn => {
       if (!result.inserted) throw new Error(`gputracking cant't inserted data.`)
     } else {
       if (!IsShutdown) {
-        LINE.Miner(`การ์ดจอ ${smi.index}:${smi.name} ดับ\nบนเครื่อง ${os.hostname()} ซึ่งกำลังรีสตาร์ทใน ${wait} วินาที.`)
+        await LINE.Miner(`การ์ดจอ ${smi.index}:${smi.name} ดับ\nบนเครื่อง ${os.hostname()} ซึ่งกำลังรีสตาร์ทใน ${wait} วินาที.`)
         if (!debug) await sendRestart()
-        await MongooseClose()
-        await conn.close()
+        MongooseClose()
       }
       IsShutdown = true
     }
@@ -85,7 +84,7 @@ rdbConnection().then(async conn => {
     cronTime: '0 0 * * *',
     onTick: async () => {
       let result = await r.db('miner').table('gpu_01').filter(item => {
-        return r.now().sub(item('created')).gt(60 * 60 * 24 * 30)
+        return r.now().sub(item('created')).gt(60 * 60 * 24 * 7)
       }).delete().run(conn)
       console.log(`[GPU] RethinkDB remove ${result.deleted} colletion.`)
     },
