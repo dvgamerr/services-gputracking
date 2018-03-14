@@ -1,8 +1,11 @@
 @echo off
+SET /A COUNT=1 >nul
 C: && cd C:\app\services-gputracking
 GOTO START
 :RESTART
-ECHO RESTARTING...
+CLS
+SET /A COUNT=%COUNT%+1 >nul
+ECHO RESTARTING %COUNT% ...
 :START
-npm run dev
+npm start
 GOTO RESTART
