@@ -14,6 +14,19 @@ let GPU = []
 
 console.log(`[GPU] RethinkDB Connecting...`)
 rdbConnection().then(async conn => {
+  conn.addListener('error', ex => {
+    Raven(ex)
+    process.exit(0)
+  })
+  conn.addListener('close', () => {
+    conn.reconnect({ noreplyWait: false }).then(reconn => {
+      conn = reconn
+    }).error(ex => {
+      Raven(ex)
+      process.exit(0)
+    })
+  })
+
   console.log(`[GPU] MongoDB Connecting...`)
   await MongooseOpen({ user: 'admin', pass: 'ar00t-touno', dbname: 'db_touno' })
   let wait = 10
