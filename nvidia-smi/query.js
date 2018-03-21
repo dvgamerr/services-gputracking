@@ -8,7 +8,7 @@ class Query {
       let value = obj[query.indexOf(id)]
       return value === '[Not Supported]' || value === '[GPU is lost]' ? null : value
     }
-    let getInt = value => value ? parseInt(/\d+/ig.exec(value)[0] || '0') : 0
+    let getInt = value => value ? parseInt((/\d+/ig.exec(value) || ['0'])[0]) : 0
     this.index = getInt(parse('index'))
     this.uuid = parse('uuid')
     this.name = parse('name')
