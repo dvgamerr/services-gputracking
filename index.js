@@ -6,24 +6,30 @@ const { r, rdbConnection } = require('touno.io/rethinkdb')
 const cron = require('cron')
 const os = require('os')
 const util = require('util')
+var kill = require('tree-kill')
 const nvsmi = require('./nvidia-smi')
 const exec = util.promisify(require('child_process').exec)
 let GPU_MAX = process.env.GPU_MAX || 1
 let IsShutdown = false
 let GPU = []
+let CMD = []
+
+let killTreeProcess = async ex => {
+  if (ex) Raven(ex)
+  for (var i = 0; i < CMD.length; i++) { CMD[i].kill('SIGINT') }
+  kill(1, 'SIGKILL')
+}
 
 console.log(`[GPU] RethinkDB Connecting...`)
 rdbConnection().then(async conn => {
   conn.addListener('error', ex => {
-    Raven(ex)
-    process.exit(0)
+
   })
   conn.addListener('close', () => {
     conn.reconnect({ noreplyWait: false }).then(reconn => {
       conn = reconn
     }).error(ex => {
-      Raven(ex)
-      process.exit(0)
+      killTreeProcess(ex)
     })
   })
 
@@ -36,10 +42,14 @@ rdbConnection().then(async conn => {
   }
 
   let gpuUploadData = async (i, smi) => {
-    if (IsShutdown) process.exit(0)
+    if (IsShutdown) {
+      console.log(`[GPU] Processing ${smi.index}:${smi.name} Kill.`)
+      killTreeProcess()
+    }
+
     if (smi.alive) {
       if (!GPU[i]) {
-        console.log(`[GPU] Processing ${smi.index}:${smi.name} ${smi.bus_id}.`)
+        console.log(`[GPU] Processing ${smi.index}:${smi.name} Watcher.`)
         GPU[i] = {
           gpu_id: smi.uuid,
           index: smi.index,
@@ -83,12 +93,15 @@ rdbConnection().then(async conn => {
 
   nvsmi.on('error', ex => { Raven(ex) })
 
+
+  nvsmi.on('child_process', ls => { CMD.push(ls) })
+
   console.log(`[GPU] ${os.hostname()} nvidia-smi processing ${GPU_MAX} card.`)
   for (let i = 0; i < GPU_MAX; i++) {
     nvsmi.emit('gpu', { id: i, interval: 1 }, smi => {
       gpuUploadData(i, smi).catch(ex => {
-        Raven(ex)
-        process.exit(0)
+        console.log(`[GPU] Exception ${smi.index}:${smi.name} Kill.`)
+        killTreeProcess(ex)
       })
     })
   }
@@ -105,7 +118,4 @@ rdbConnection().then(async conn => {
     timeZone: 'Asia/Bangkok'
   })
   console.log(`[GPU] Purge data Tasks ${job.running ? 'started' : 'stoped'}`)
-}).catch(ex => {
-  Raven(ex)
-  process.exit(0)
-})
+}).catch(killTreeProcess)

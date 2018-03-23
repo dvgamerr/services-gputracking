@@ -43,6 +43,7 @@ emiter.on('gpu', (config, watcher) => {
     ls.stderr.on('data', data => {
       emiter.emit('error', new Error(data.toString()))
     })
+    emiter.emit('child_process', ls)
   } else {
     emiter.emit('error', new Error(`Please install nvidia driver and check 'nvidia-smi.exe'.`))
   }
