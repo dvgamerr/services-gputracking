@@ -29,7 +29,7 @@
     "rethinkdb": "^2.3.3",
     "sms-gateway-nodejs": "^0.1.0",
     "touno.io": "git+https://github.com/dvgamer/module-touno.io.git",
-    "tree-kill": "^1.2.0"
+    "tree-kill": "^1.2.2"
   },
   "devDependencies": {
     "babel-eslint": "^8.2.1",
